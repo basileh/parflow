@@ -50,7 +50,7 @@
 #include <float.h>
 #include <limits.h>
 
-#define PF_CLM_MAX_ROOT_NZ 20
+#define PF_CLM_MAX_ROOT_NZ 25
 
 /*--------------------------------------------------------------------------
  * Structures
