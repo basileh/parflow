@@ -48,6 +48,10 @@
 
 #include <tcl.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
@@ -87,7 +91,7 @@ typedef struct {
 #define DataboxLabel(databox)   ((databox)->label)
 
 #define DataboxCoeff(databox, i, j, k) \
-  (DataboxCoeffs(databox) + \
+  (DataboxCoeffs(databox) +            \
    (k) * DataboxNy(databox) * DataboxNx(databox) + (j) * DataboxNx(databox) + (i))
 
 
@@ -113,6 +117,10 @@ void GetDataboxGrid(Tcl_Interp *interp, Databox *databox);
 void SetDataboxGrid(Databox *databox, int nx, int ny, int nz, double x, double y, double z,
                     double dx, double dy, double dz);
 void FreeDatabox(Databox *databox);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

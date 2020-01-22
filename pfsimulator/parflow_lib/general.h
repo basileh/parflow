@@ -40,9 +40,9 @@
  * Error macros
  *--------------------------------------------------------------------------*/
 
-#define PARFLOW_ERROR(X)                                \
-  do {                                                 \
-    _amps_Abort(X, __FILE__, __LINE__);               \
+#define PARFLOW_ERROR(X)                \
+  do {                                  \
+    _amps_Abort(X, __FILE__, __LINE__); \
   } while (0)
 
 /*--------------------------------------------------------------------------
@@ -58,7 +58,7 @@
 #define talloc(type, count) \
   (type*)malloc_chk((unsigned int)((count) * sizeof(type)), __FILE__, __LINE__)
 
-#define ctalloc(type, count) \
+#define ctalloc(type, count)                                           \
   (type*)calloc_chk((unsigned int)(count), (unsigned int)sizeof(type), \
                     __FILE__, __LINE__)
 
@@ -72,7 +72,7 @@
 #else
 
 #define talloc(type, count) \
-  ((count) ? (type*)malloc(sizeof(type) * (size_t)(count)) : NULL)
+  ((count) ? (type*)malloc(sizeof(type) * (unsigned int)(count)) : NULL)
 
 #define ctalloc(type, count) \
   ((count) ? (type*)calloc((unsigned int)(count), (unsigned int)sizeof(type)) : NULL)

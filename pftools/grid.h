@@ -30,6 +30,10 @@
 
 #include "region.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*--------------------------------------------------------------------------
  * Terminology:
  *   See region.h
@@ -119,36 +123,31 @@ typedef struct {
  * Class member functions:
  *--------------------------------------------------------------------------*/
 
-#define NewSubgrid(x, y, z, nx, ny, nz, rx, ry, rz, process)  \
+#define NewSubgrid(x, y, z, nx, ny, nz, rx, ry, rz, process) \
   ((Subgrid*)NewSubregion(x, y, z, nx, ny, nz, 1, 1, 1, rx, ry, rz, process))
 
 #define NewSubgridArray()  ((SubgridArray*)NewSubregionArray())
 
 #define FreeSubgrid(subgrid)  FreeSubregion((Subregion*)subgrid)
 
-#define FreeSubgridArray(subgrid_array)  \
+#define FreeSubgridArray(subgrid_array) \
   FreeSubregionArray((SubregionArray*)subgrid_array)
 
-#define AppendSubgrid(subgrid, subgrid_array)  \
+#define AppendSubgrid(subgrid, subgrid_array) \
   AppendSubregion((Subregion*)subgrid, (SubregionArray**)subgrid_array)
 
-#define AppendSubgridArray(subgrid_array_0, subgrid_array_1)  \
-  AppendSubregionArray((SubregionArray*)subgrid_array_0, \
+#define AppendSubgridArray(subgrid_array_0, subgrid_array_1) \
+  AppendSubregionArray((SubregionArray*)subgrid_array_0,     \
                        (SubregionArray**)subgrid_array_1)
 
 
-#ifdef __STDC__
-# define        ANSI_PROTO(s) s
-#else
-# define ANSI_PROTO(s) ()
-#endif
-
-
 /* grid.c */
-Grid * NewGrid ANSI_PROTO((SubgridArray *subgrids, SubgridArray *all_subgrids, SubgridArray *neighbors));
-void FreeGrid ANSI_PROTO((Grid *grid));
+Grid * NewGrid(SubgridArray *subgrids, SubgridArray *all_subgrids, SubgridArray *neighbors);
+void FreeGrid(Grid *grid);
 
-#undef ANSI_PROTO
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
