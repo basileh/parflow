@@ -168,9 +168,9 @@
 /*----------------------------------------------------------------
  * BCPressure Values
  * These contain information for a particular interval
- * @MCB: Is there a way we could generate these based on BC_TYPE_TABLE?
- *       Would remove the need to define what is basically the same
- *       struct twice.
+ * @MCB: These appear to consistently have the same layout as
+ *       the type struct definitions, with one less reference level.
+ *       Could use C++ std::remove_pointer to only need one table def.
  *----------------------------------------------------------------*/
 #define BC_INTERVAL_TYPE_TABLE   \
   BC_TYPE(DirEquilRefPatch, {    \
@@ -250,7 +250,8 @@ BC_INTERVAL_TYPE_TABLE
 #define GetBCPressureTypeStruct(type, varname, bc_pressure_data, ipatch, interval_number) \
   BCPressureType ## type * varname                                                        \
     = (BCPressureType ## type*)BCPressureDataIntervalValue(bc_pressure_data,              \
-                                                           (ipatch), (interval_number))
+                                                           (ipatch), (interval_number));  \
+  PF_UNUSED(varname)
 
 /*----------------------------------------------------------------
  * BCPressure Data structure

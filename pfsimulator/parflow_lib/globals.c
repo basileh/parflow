@@ -25,11 +25,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  *  USA
  **********************************************************************EHEADER*/
-/*****************************************************************************
-*
-* Routines for manipulating global structures.
-*
-*****************************************************************************/
+
+/** @file
+ * @brief Routines for manipulating global structures.
+ */
 
 #define PARFLOW_GLOBALS
 
@@ -37,15 +36,14 @@
 #include "globals.h"
 
 #include <limits.h>
-
+#include <stddef.h>
 
 /*--------------------------------------------------------------------------
  * NewGlobals
  *--------------------------------------------------------------------------*/
-
 void   NewGlobals(char *run_name)
 {
-  globals = ctalloc(Globals, 1);
+  globals_ptr = ctalloc(Globals, 1);
 
   sprintf(GlobalsRunName, "%s", run_name);
   sprintf(GlobalsInFileName, "%s.%s", run_name, "pfidb");
@@ -90,7 +88,7 @@ void   NewGlobals(char *run_name)
 
 void  FreeGlobals()
 {
-  free(globals);
+  tfree(globals_ptr);
 }
 
 /*--------------------------------------------------------------------------
@@ -119,5 +117,3 @@ void  LogGlobals()
     CloseLogFile(log_file);
   }
 }
-
-

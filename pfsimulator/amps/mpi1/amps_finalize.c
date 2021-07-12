@@ -70,6 +70,9 @@ int amps_Finalize()
 
     MPI_Finalize();
   }
+#if defined(PARFLOW_HAVE_CUDA) || defined(PARFLOW_HAVE_KOKKOS)
+  amps_gpu_finalize();
+#endif
 
 #ifdef AMPS_MALLOC_DEBUG
   /* check out the heap and shut everything down if we are in debug mode */

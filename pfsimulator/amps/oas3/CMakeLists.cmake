@@ -26,3 +26,11 @@ set(AMPS_SRC_FILES
   receive_fld2_clm.F90
   send_fld2_clm.F90
   )
+
+if((${PARFLOW_HAVE_CUDA}) AND (NOT (${PARFLOW_HAVE_KOKKOS})))
+  list(APPEND AMPS_SRC_FILES amps_gpupacking.cu)
+endif((${PARFLOW_HAVE_CUDA}) AND (NOT (${PARFLOW_HAVE_KOKKOS})))
+
+if(${PARFLOW_HAVE_KOKKOS})
+  list(APPEND AMPS_SRC_FILES amps_gpupacking.cpp)
+endif(${PARFLOW_HAVE_KOKKOS})

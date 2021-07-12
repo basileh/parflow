@@ -32,7 +32,6 @@
 *****************************************************************************/
 
 #include "parflow.h"
-
 #include "matrix.h"
 
 #ifdef HAVE_SAMRAI
@@ -42,9 +41,9 @@
 
 using namespace SAMRAI;
 
-#endif
-
 static int samrai_matrix_ids[4][2048];
+
+#endif
 
 
 /*--------------------------------------------------------------------------
@@ -353,8 +352,8 @@ Matrix          *NewMatrixType(
     }
   }
 
-  enum ParflowGridType grid_type = invalid_grid_type;
 #ifdef HAVE_SAMRAI
+  enum ParflowGridType grid_type = invalid_grid_type;
   switch (type)
   {
     case matrix_cell_centered:
@@ -508,7 +507,7 @@ Matrix          *NewMatrixType(
       case matrix_non_samrai:
       {
         Submatrix *submatrix = MatrixSubmatrix(new_matrix, i);
-        data = amps_CTAlloc(double, submatrix->data_size);
+        data = ctalloc_amps(double, submatrix->data_size);
         submatrix->allocated = TRUE;
         SubmatrixData(submatrix) = data;
 
@@ -612,6 +611,9 @@ Matrix          *NewMatrixType(
         MatrixCommPkg(new_matrix) = NewMatrixUpdatePkg(new_matrix, ghost);
 
       break;
+    default:
+      PARFLOW_ERROR("invalid matrix type");
+      break;
   }
 
   /*-----------------------------------------------------------------------
@@ -690,7 +692,7 @@ void FreeMatrix(
 
     if (submatrix->allocated)
     {
-      tfree(submatrix->data);
+      tfree_amps(submatrix->data);
     }
 
     tfree(submatrix->data_index);

@@ -26,17 +26,16 @@
  *  USA
  **********************************************************************EHEADER*/
 
-#include <stdio.h>
-#include <sys/param.h>
-#include <sys/param.h>
-#include <stdlib.h>
-
-#include <unistd.h>
-#include <sys/times.h>
-#include  <inttypes.h>
-
 #include "amps.h"
 
+#include <stdio.h>
+#include <sys/param.h>
+#include <sys/times.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <inttypes.h>
+
+/* Global flag indicating if AMPS has been initialized */
 int amps_mpi_initialized = FALSE;
 
 #ifdef AMPS_MALLOC_DEBUG
@@ -49,8 +48,8 @@ int amps_node_rank;
 int amps_node_size;
 int amps_write_rank;
 int amps_write_size;
-MPI_Comm nodeComm = MPI_COMM_NULL;
-MPI_Comm writeComm = MPI_COMM_NULL;
+MPI_Comm amps_CommNode = MPI_COMM_NULL;
+MPI_Comm amps_CommWrite = MPI_COMM_NULL;
 
 #ifdef AMPS_F2CLIB_FIX
 int MAIN__()
@@ -58,7 +57,25 @@ int MAIN__()
 }
 #endif
 
-/*===========================================================================*/
+/*Adler32 function to calculate hash based on node name and length */
+const int MOD_ADLER = 65521;
+
+uint32_t Adler32(unsigned char *data, size_t len) /* where data is the location of the data in physical memory and
+                                                   * len is the length of the data in bytes */
+{
+  uint32_t a = 1, b = 0;
+  size_t index;
+
+/* Process each byte of the data in order */
+  for (index = 0; index < len; ++index)
+  {
+    a = (a + data[index]) % MOD_ADLER;
+    b = (b + a) % MOD_ADLER;
+  }
+
+  return (b << 16) | a;
+}
+
 /**
  *
  * Every {\em AMPS} program must call this function to initialize the
@@ -89,24 +106,6 @@ int MAIN__()
  * @param argv Command line argument array [IN/OUT]
  * @return
  */
-/*Adler32 function to calculate hash based on node name and length */
-const int MOD_ADLER = 65521;
-
-uint32_t Adler32(unsigned char *data, size_t len) /* where data is the location of the data in physical memory and
-                                                   * len is the length of the data in bytes */
-{
-  uint32_t a = 1, b = 0;
-  size_t index;
-
-/* Process each byte of the data in order */
-  for (index = 0; index < len; ++index)
-  {
-    a = (a + data[index]) % MOD_ADLER;
-    b = (b + a) % MOD_ADLER;
-  }
-
-  return (b << 16) | a;
-}
 int amps_Init(int *argc, char **argv[])
 {
 #ifdef AMPS_MPI_SETHOME
@@ -114,20 +113,27 @@ int amps_Init(int *argc, char **argv[])
   int length;
 #endif
 
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-  unsigned char processor_Name[MPI_MAX_PROCESSOR_NAME];
-  int namelen;
-
   MPI_Init(argc, argv);
   amps_mpi_initialized = TRUE;
 
   MPI_Comm_size(MPI_COMM_WORLD, &amps_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &amps_rank);
 
-  /*Split the node level communicator based on Adler32 hash keys*/
+  /* Create communicator with one rank per compute node */
+#if MPI_VERSION >= 3
+  MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &amps_CommNode);
+#else
+  /* Split the node level communicator based on Adler32 hash keys of processor name */
+  char processor_name[MPI_MAX_PROCESSOR_NAME];
+  int namelen;
   MPI_Get_processor_name(processor_name, &namelen);
-  uint32_t checkSum = Adler32(processor_name, namelen);
+  uint32_t checkSum = Adler32((unsigned char*)processor_name, namelen);
+  /* Comm split only accepts non-negative numbers */
+  /* Not super great for hashing purposes but hoping MPI-3 code will be used on most cases */
+  checkSum &= INT_MAX;
   MPI_Comm_split(MPI_COMM_WORLD, checkSum, amps_rank, &amps_CommNode);
+#endif
+  
   MPI_Comm_rank(amps_CommNode, &amps_node_rank);
   MPI_Comm_size(amps_CommNode, &amps_node_size);
   int color;
@@ -198,8 +204,6 @@ int amps_Init(int *argc, char **argv[])
   return 0;
 }
 
-
-/*===========================================================================*/
 /**
  *
  * Initialization when ParFlow is being invoked by another application.
@@ -231,19 +235,11 @@ int amps_EmbeddedInit(void)
   setbuf(stdout, NULL);
 #endif
 
-#ifdef CASC_HAVE_GETTIMEOFDAY
   amps_clock_init();
-#endif
 
 #ifdef AMPS_MALLOC_DEBUG
   dmalloc_logpath = amps_malloclog;
   sprintf(dmalloc_logpath, "malloc.log.%04d", amps_Rank(amps_CommWorld));
-#endif
-
-#ifdef TIMING
-#ifndef CRAY_TIME
-  AMPS_CPU_TICKS_PER_SEC = sysconf(_SC_CLK_TCK);
-#endif
 #endif
 
   return 0;

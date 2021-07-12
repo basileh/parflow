@@ -26,8 +26,8 @@
  *  USA
  **********************************************************************EHEADER*/
 #include "amps.h"
-int dummy2_oas3 = 0;
 
+int dummy2_oas3 = 0;
 extern int amps_mpi_initialized;
 
 /*===========================================================================*/
@@ -65,9 +65,13 @@ int amps_Finalize()
 {
   if (amps_mpi_initialized)
   {
-/*      MPI_Finalize();*/
+    MPI_Comm_free(&amps_CommNode);
+    MPI_Comm_free(&amps_CommWrite);
     CALL_oas_pfl_finalize(&dummy2_oas3);
   }
+#if defined(PARFLOW_HAVE_CUDA) || defined(PARFLOW_HAVE_KOKKOS)
+  amps_gpu_finalize();
+#endif
 
 #ifdef AMPS_MALLOC_DEBUG
   /* check out the heap and shut everything down if we are in debug mode */

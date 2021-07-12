@@ -41,7 +41,6 @@
 /*----------------------------------------------------------------
  * Globals structure
  *----------------------------------------------------------------*/
-
 typedef struct _Globals {
   char run_name[256];
   char in_file_name[256];
@@ -89,7 +88,7 @@ typedef struct _Globals {
 
   int use_clustering;
 
-#ifdef  HAVE_SAMRAI
+#ifdef HAVE_SAMRAI
   SAMRAI::tbox::Pointer < Parflow > parflow_simulation;
 #endif
 } Globals;
@@ -103,7 +102,6 @@ amps_ThreadLocalDcl(extern IDB *, input_database);
 #endif
 
 #define globals amps_ThreadLocal(globals_ptr)
-
 
 /*--------------------------------------------------------------------------
  * Accessor macros: Globals

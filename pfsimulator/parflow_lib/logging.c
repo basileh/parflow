@@ -130,15 +130,27 @@ int  CloseLogFile(FILE *log_file)
  */
 void PrintVersionInfo(FILE *log_file)
 {
-  fprintf(log_file, "\tVersion        : %s\n", PARFLOW_VERSION_STRING);
-  fprintf(log_file, "\tCompiled on    : %s %s\n", __DATE__, __TIME__);
+  fprintf(log_file, "\tVersion         : %s\n", PARFLOW_VERSION_STRING);
+  fprintf(log_file, "\tCompiled on     : %s %s\n", __DATE__, __TIME__);
+  
 #ifdef CFLAGS
-  fprintf(log_file, "\tWith C flags   : %s\n", CFLAGS);
+  fprintf(log_file, "\tWith C flags    : %s\n", CFLAGS);
 #endif
 
 #ifdef FFLAGS
-  fprintf(log_file, "\tWith F77 flags : %s\n", FFLAGS);
+  fprintf(log_file, "\tWith F77 flags  : %s\n", FFLAGS);
 #endif
+
+#if defined(PARFLOW_HAVE_KOKKOS) && !defined(PARFLOW_HAVE_RMM)
+  fprintf(log_file, "\tWith acc backend: KOKKOS\n");
+#elif defined(PARFLOW_HAVE_KOKKOS) && defined(PARFLOW_HAVE_RMM)
+  fprintf(log_file, "\tWith acc backend: KOKKOS+RMM\n");
+#elif defined(PARFLOW_HAVE_CUDA) && !defined(PARFLOW_HAVE_RMM)
+  fprintf(log_file, "\tWith acc backend: CUDA\n");
+#elif defined(PARFLOW_HAVE_CUDA) && defined(PARFLOW_HAVE_RMM)
+  fprintf(log_file, "\tWith acc backend: CUDA+RMM\n");
+#elif defined(PARFLOW_HAVE_OMP)
+  fprintf(log_file, "\tWith acc backend: OMP\n");
+#endif
+
 }
-
-

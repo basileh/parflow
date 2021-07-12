@@ -34,6 +34,7 @@
 #include "grid.h"
 
 #include <math.h>
+#include <string.h>
 
 /*--------------------------------------------------------------------------
  * NewSubregion
@@ -55,7 +56,6 @@ Subregion  *NewSubregion(
                          int process)
 {
   Subregion *new_subregion;
-
 
   new_subregion = talloc(Subregion, 1);
 
@@ -99,7 +99,6 @@ SubregionArray  *NewSubregionArray()
   return new_subregion_array;
 }
 
-
 /*--------------------------------------------------------------------------
  * NewRegion
  *--------------------------------------------------------------------------*/
@@ -112,9 +111,11 @@ Region  *NewRegion(
   int i;
 
 
-  new_region = ctalloc(Region, 1);
+  new_region = talloc(Region, 1);
+  memset(new_region, 0, sizeof(Region));
 
-  (new_region->subregion_arrays) = ctalloc(SubregionArray *, size);
+  (new_region->subregion_arrays) = talloc(SubregionArray *, size);
+  memset(new_region->subregion_arrays, 0, size * sizeof(SubregionArray *));
 
   for (i = 0; i < size; i++)
     RegionSubregionArray(new_region, i) = NewSubregionArray();
@@ -225,7 +226,8 @@ SubregionArray  *DuplicateSubregionArray(
   {
     data_sz = ((((new_sz - 1) / SubregionArrayBlocksize) + 1) *
                SubregionArrayBlocksize);
-    new_s = ctalloc(Subregion *, data_sz);
+    new_s = talloc(Subregion *, data_sz);
+    memset(new_s, 0, data_sz * sizeof(Subregion *));
 
     old_s = SubregionArraySubregions(subregion_array);
 
@@ -294,7 +296,8 @@ void             AppendSubregion(
 
   if (!(sr_array_sz % SubregionArrayBlocksize))
   {
-    new_s = ctalloc(Subregion *, sr_array_sz + SubregionArrayBlocksize);
+    new_s = talloc(Subregion *, sr_array_sz + SubregionArrayBlocksize);
+    memset(new_s, 0, (sr_array_sz + SubregionArrayBlocksize) * sizeof(Subregion *));
     old_s = (sr_array->subregions);
 
     for (i = 0; i < sr_array_sz; i++)
@@ -370,4 +373,3 @@ void             AppendSubregionArray(
 /*--------------------------------------------------------------------------
  * CommRegFromStencil: RDF todo
  *--------------------------------------------------------------------------*/
-

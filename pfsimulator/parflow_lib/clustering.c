@@ -31,6 +31,8 @@
 #include "index_space.h"
 #include "llnlmath.h"
 
+#include <string.h>
+
 /**
  * This implementation is derived from the SAMRAI Berger-Rigoutsos
  * implementation developed by LLNL.
@@ -47,6 +49,10 @@
  * Sys, Man, and Cyber (21)5:1278-1286.
  */
 
+/**
+ * Tag count.
+ */
+static int tag_count;
 
 /**
  * Maximum number of ghost layers.
@@ -100,7 +106,8 @@ void HistogramBoxAddTags(HistogramBox *histogram_box, int dim, int global_index,
  */
 HistogramBox* NewHistogramBox(Box *box)
 {
-  HistogramBox* histogram_box = ctalloc(HistogramBox, 1);
+  HistogramBox* histogram_box = talloc(HistogramBox, 1);
+  memset(histogram_box, 0, sizeof(HistogramBox));
 
   BoxCopy(&(histogram_box->box), box);
 
@@ -108,7 +115,8 @@ HistogramBox* NewHistogramBox(Box *box)
 
   for (int dim = 0; dim < DIM; dim++)
   {
-    histogram_box->histogram[dim] = ctalloc(int, size);
+    histogram_box->histogram[dim] = talloc(int, size);
+    memset(histogram_box->histogram[dim], 0, size * sizeof(int));
   }
 
   return histogram_box;
@@ -240,7 +248,7 @@ void ReduceTags(HistogramBox *histogram_box, Vector *vector, int dim, DoubleTags
 
   for (int ic_sb = ilo; ic_sb <= ihi; ic_sb++)
   {
-    int tag_count = 0;
+    tag_count = 0;
 
     Box src_box;
     BoxClear(&src_box);
@@ -308,12 +316,11 @@ void ReduceTags(HistogramBox *histogram_box, Vector *vector, int dim, DoubleTags
                 ((src_box.lo[1] <= j) && (j <= src_box.up[1])) &&
                 ((src_box.lo[2] <= k) && (k <= src_box.up[2])))
             {
-              tag_count++;
+              PlusEquals(tag_count, 1);
             }
           }
         });
       }
-
       HistogramBoxAddTags(histogram_box, dim, ic_sb, tag_count);
     }
   }
@@ -663,12 +670,10 @@ void BergerRigoutsos(Vector*    vector,
                      BoxList*   boxes)
 {
   Grid* grid = VectorGrid(vector);
-  Subvector* v_sub;
   Subgrid* subgrid;
 
   int ix, iy, iz;
   int nx, ny, nz;
-  int nx_v, ny_v, nz_v;
 
   int i_s;
 
@@ -682,8 +687,6 @@ void BergerRigoutsos(Vector*    vector,
   {
     subgrid = GridSubgrid(grid, i_s);
 
-    v_sub = VectorSubvector(vector, i_s);
-
     ix = SubgridIX(subgrid) - num_ghost;
     iy = SubgridIY(subgrid) - num_ghost;
     iz = SubgridIZ(subgrid) - num_ghost;
@@ -691,10 +694,6 @@ void BergerRigoutsos(Vector*    vector,
     nx = SubgridNX(subgrid) + 2 * num_ghost;
     ny = SubgridNY(subgrid) + 2 * num_ghost;
     nz = SubgridNZ(subgrid) + 2 * num_ghost;
-
-    nx_v = SubvectorNX(v_sub);
-    ny_v = SubvectorNY(v_sub);
-    nz_v = SubvectorNZ(v_sub);
 
     lo[0] = ix;
     lo[1] = iy;
@@ -791,7 +790,7 @@ void BergerRigoutsos(Vector*    vector,
  *
  * The computed box arrays are stored in the geom_solid.
  */
-BoxList* ComputePatchBoxes(GrGeomSolid *geom_solid, int patch)
+void ComputePatchBoxes(GrGeomSolid *geom_solid, int patch)
 {
   Grid *grid = CreateGrid(GlobalsUserGrid);
 
@@ -807,16 +806,13 @@ BoxList* ComputePatchBoxes(GrGeomSolid *geom_solid, int patch)
 
     Subvector   *d_sub;
 
-    int ip;
-
     int i, j, k, r, is;
     int ix, iy, iz;
     int nx, ny, nz;
-    double dx, dy, dz;
 
     double *dp;
 
-    int tag_count = 0;
+    tag_count = 0;
 
     ForSubgridI(is, GridSubgrids(grid))
     {
@@ -835,24 +831,21 @@ BoxList* ComputePatchBoxes(GrGeomSolid *geom_solid, int patch)
       ny = SubgridNY(subgrid);
       nz = SubgridNZ(subgrid);
 
-      dx = SubgridDX(subgrid);
-      dy = SubgridDY(subgrid);
-      dz = SubgridDZ(subgrid);
-
       dp = SubvectorData(d_sub);
 
       int *fdir;
       GrGeomPatchLoop(i, j, k, fdir, geom_solid, patch,
                       r, ix, iy, iz, nx, ny, nz,
       {
-        ip = SubvectorEltIndex(d_sub, i, j, k);
-
+        int ip = SubvectorEltIndex(d_sub, i, j, k);
         int this_face_tag = 1 << PV_f;
-        tag.as_double = dp[ip];
-        tag.as_tags = tag.as_tags | this_face_tag;
-        dp[ip] = tag.as_double;
+        
+        DoubleTags v;
+        v.as_double = dp[ip];
+        v.as_tags = v.as_tags | this_face_tag;
+        dp[ip] = v.as_double;
 
-        tag_count++;
+        PlusEquals(tag_count, 1);
       });
     }
   }
@@ -913,16 +906,13 @@ void ComputeSurfaceBoxes(GrGeomSolid *geom_solid)
 
     Subvector   *d_sub;
 
-    int ip;
-
     int i, j, k, r, is;
     int ix, iy, iz;
     int nx, ny, nz;
-    double dx, dy, dz;
 
     double *dp;
 
-    int tag_count = 0;
+    tag_count = 0;
 
     ForSubgridI(is, GridSubgrids(grid))
     {
@@ -941,23 +931,20 @@ void ComputeSurfaceBoxes(GrGeomSolid *geom_solid)
       ny = SubgridNY(subgrid);
       nz = SubgridNZ(subgrid);
 
-      dx = SubgridDX(subgrid);
-      dy = SubgridDY(subgrid);
-      dz = SubgridDZ(subgrid);
-
       dp = SubvectorData(d_sub);
 
       int *fdir;
       GrGeomSurfLoop(i, j, k, fdir, geom_solid, r, ix, iy, iz, nx, ny, nz,
       {
-        ip = SubvectorEltIndex(d_sub, i, j, k);
-
+        int ip = SubvectorEltIndex(d_sub, i, j, k);
         int this_face_tag = 1 << PV_f;
-        tag.as_double = dp[ip];
-        tag.as_tags = tag.as_tags | this_face_tag;
-        dp[ip] = tag.as_double;
+        
+        DoubleTags v;
+        v.as_double = dp[ip];
+        v.as_tags = v.as_tags | this_face_tag;
+        dp[ip] = v.as_double;
 
-        tag_count++;
+        PlusEquals(tag_count, 1);
       });
     }
   }
@@ -1018,16 +1005,13 @@ void ComputeInteriorBoxes(GrGeomSolid *geom_solid)
 
     Subvector   *d_sub;
 
-    int ip;
-
     int i, j, k, r, is;
     int ix, iy, iz;
     int nx, ny, nz;
-    double dx, dy, dz;
 
     double *dp;
 
-    int tag_count = 0;
+    tag_count = 0;
 
     ForSubgridI(is, GridSubgrids(grid))
     {
@@ -1046,18 +1030,14 @@ void ComputeInteriorBoxes(GrGeomSolid *geom_solid)
       ny = SubgridNY(subgrid);
       nz = SubgridNZ(subgrid);
 
-      dx = SubgridDX(subgrid);
-      dy = SubgridDY(subgrid);
-      dz = SubgridDZ(subgrid);
-
       dp = SubvectorData(d_sub);
 
       GrGeomInLoop(i, j, k, geom_solid, r, ix, iy, iz, nx, ny, nz,
       {
-        ip = SubvectorEltIndex(d_sub, i, j, k);
+        int ip = SubvectorEltIndex(d_sub, i, j, k);
 
         dp[ip] = tag.as_double;
-        tag_count++;
+        PlusEquals(tag_count, 1);
       });
     }
   }
@@ -1102,4 +1082,3 @@ void ComputeBoxes(GrGeomSolid *geom_solid)
 
   EndTiming(ClusteringTimingIndex);
 }
-

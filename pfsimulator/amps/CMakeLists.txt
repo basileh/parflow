@@ -12,9 +12,32 @@ string(REGEX REPLACE "([^;]+)" "${PARFLOW_AMPS_LAYER}/\\1" AMPS_SRC_FILES "${AMP
 
 add_library(amps STATIC ${COMMON_SRC_FILES} ${AMPS_SRC_FILES})
 
+if(${PARFLOW_HAVE_CUDA})
+  target_include_directories(amps PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+endif(${PARFLOW_HAVE_CUDA})
+
+if( ${PARFLOW_HAVE_RMM} )
+  target_link_libraries(amps rmm)
+  target_include_directories(amps PUBLIC ${RMM_INCLUDE})
+endif( ${PARFLOW_HAVE_RMM} )
+
+if( ${PARFLOW_HAVE_KOKKOS} )
+  target_link_libraries(amps Kokkos::kokkos)
+  target_include_directories(amps PUBLIC ${KOKKOS_INCLUDE})
+endif( ${PARFLOW_HAVE_KOKKOS} )
+
 if (${PARFLOW_HAVE_MPI})
   target_include_directories (amps PUBLIC "${MPI_C_INCLUDE_PATH}")
 endif (${PARFLOW_HAVE_MPI})
+
+if(${PARFLOW_HAVE_OAS3})
+  target_link_libraries(amps ${OASIS_Fortran_LIBRARY} ${MCT_Fortran_LIBRARY} ${MPEU_Fortran_LIBRARY} ${SCRIP_Fortran_LIBRARY})
+  target_include_directories(amps PUBLIC "${OASIS_Fortran_INCLUDES}")
+  
+  target_link_libraries(amps ${NETCDF_Fortran_LIBRARY})
+  target_include_directories(amps PUBLIC "${NETCDF_Fortran_INCLUDES}")
+endif(${PARFLOW_HAVE_OAS3})
+
 
 install(TARGETS amps DESTINATION lib)
 
@@ -22,4 +45,6 @@ install(TARGETS amps DESTINATION lib)
 set(AMPS_SCRIPTS run)
 string(REGEX REPLACE "([^;]+)" "${PARFLOW_AMPS_LAYER}/\\1" AMPS_SCRIPTS "${AMPS_SCRIPTS}")
 install(FILES ${AMPS_SCRIPTS} DESTINATION bin)
+
+add_subdirectory (test/src)
 

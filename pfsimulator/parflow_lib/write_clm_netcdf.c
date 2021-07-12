@@ -20,10 +20,10 @@
  *  USA
  **********************************************************************EHEADER*/
 /*****************************************************************************
-*
-* Routines to write a Vector to a file in full or scattered form.
-*
-*****************************************************************************/
+ *
+ * Routines to write a Vector to a file in full or scattered form.
+ *
+ *****************************************************************************/
 
 #include "parflow.h"
 #include "parflow_netcdf.h"
@@ -35,9 +35,11 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#ifdef PARFLOW_HAVE_NETCDF
 static bool isCLM2Ddefined = false;
 static bool isCLM3Ddefined = false;
 static bool isCLMTdefined = false;
+#endif
 
 void WriteCLMNC(char * file_prefix, char* file_postfix, double t, Vector  *v, int numVarTimeVariant,
                 char *varName, int dimensionality)
@@ -99,8 +101,7 @@ void CreateCLMNCFile(char *file_name, int *clmIDs)
   char *switch_name;
   char key[IDB_MAX_KEY_LEN];
   char *default_val = "None";
-  int old_fill_mode;
-
+  
   sprintf(key, "NetCDF.ROMIOhints");
   switch_name = GetStringDefault(key, "None");
   if (strcmp(switch_name, default_val) != 0)
@@ -121,10 +122,18 @@ void CreateCLMNCFile(char *file_name, int *clmIDs)
       MPI_Info_set(romio_info, romio_key, value);
     }
     int res = nc_create_par(file_name, NC_NETCDF4 | NC_MPIIO, amps_CommWorld, romio_info, &clmIDs[0]);
+    if (res != NC_NOERR)
+    {
+      printf("Error: nc_create_par failed for file <%s>, error code=%d\n", file_name, res);
+    }
   }
   else
   {
     int res = nc_create_par(file_name, NC_NETCDF4 | NC_MPIIO, amps_CommWorld, MPI_INFO_NULL, &clmIDs[0]);
+    if (res != NC_NOERR)
+    {
+      printf("Error: nc_create_par failed for file <%s>, error code=%d\n", file_name, res);
+    }
   }
 #else
   amps_Printf("Parflow not compiled with NetCDF, can't create NetCDF file\n");
@@ -136,32 +145,25 @@ void NCCLMDefDimensions(Vector *v, int dimensionality, int *clmIDs)
 #ifdef PARFLOW_HAVE_NETCDF
   if (dimensionality == 1 && !isCLMTdefined)
   {
-    int res = nc_def_dim(clmIDs[0], "time", NC_UNLIMITED, &clmIDs[1]);
+    nc_def_dim(clmIDs[0], "time", NC_UNLIMITED, &clmIDs[1]);
     isCLMTdefined = true;
   }
 
   if (dimensionality == 2 && !isCLM2Ddefined)
   {
     Grid           *grid = VectorGrid(v);
-    SubgridArray   *subgrids = GridSubgrids(grid);
-    Subgrid        *subgrid;
-    Subvector      *subvector;
 
     int nX = SubgridNX(GridBackground(grid));
     int nY = SubgridNY(GridBackground(grid));
-    int nZ = SubgridNZ(GridBackground(grid));
 
-    int res = nc_def_dim(clmIDs[0], "x", nX, &clmIDs[4]);
-    res = nc_def_dim(clmIDs[0], "y", nY, &clmIDs[3]);
+    nc_def_dim(clmIDs[0], "x", nX, &clmIDs[4]);
+    nc_def_dim(clmIDs[0], "y", nY, &clmIDs[3]);
     isCLM2Ddefined = true;
   }
 
   if (dimensionality == 3 && !isCLM3Ddefined)
   {
     Grid           *grid = VectorGrid(v);
-    SubgridArray   *subgrids = GridSubgrids(grid);
-    Subgrid        *subgrid;
-    Subvector      *subvector;
 
     int nX = SubgridNX(GridBackground(grid));
     int nY = SubgridNY(GridBackground(grid));
@@ -177,7 +179,6 @@ void NCCLMDefDimensions(Vector *v, int dimensionality, int *clmIDs)
 
     res = nc_def_dim(clmIDs[0], "z", nZ, &clmIDs[2]);
 
-
     isCLM3Ddefined = true;
   }
 #endif
@@ -186,6 +187,22 @@ void NCCLMDefDimensions(Vector *v, int dimensionality, int *clmIDs)
 int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
 {
 #ifdef PARFLOW_HAVE_NETCDF
+  // Read NetCDF compression configuration settings
+  int enable_netcdf_compression = 0;
+  {
+    char key[IDB_MAX_KEY_LEN];
+    sprintf(key, "NetCDF.Compression");
+    char *switch_name = GetStringDefault(key, "False");
+    char *default_val = "False";
+    enable_netcdf_compression = strcmp(switch_name, default_val);
+  }
+  int compression_level = 1;
+  {
+    char key[IDB_MAX_KEY_LEN];
+    sprintf(key, "NetCDF.CompressionLevel");
+    compression_level = GetIntDefault(key, 1);
+  }
+
   if (strcmp(varName, "time") == 0)
   {
     *myVarNCData = malloc(sizeof(varNCData));
@@ -201,7 +218,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
     {
       res = nc_inq_varid(clmIDs[0], varName, &timCLMVarID);
       if (res != NC_NOERR)
-        printf("Something went wrong in definition %d\n", res);
+      {
+        printf("Error: Something went wrong in definition %d\n", res);
+      }
     }
     return timCLMVarID;
   }
@@ -235,6 +254,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkY");
         chunksize[3] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], tsoilCLMVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],tsoilCLMVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -272,6 +294,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], lhTotVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],lhTotVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -307,6 +332,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[1] = GetInt("NetCDF.ChunkY");
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], lwradVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],lwradVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -344,6 +372,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], shTotVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],shTotVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -379,6 +410,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[1] = GetInt("NetCDF.ChunkY");
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], soilGrndVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],soilGrndVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -416,6 +450,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qEvapTotVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qEvapTotVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -451,6 +488,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[1] = GetInt("NetCDF.ChunkY");
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qEvapGrndVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qEvapGrndVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -488,6 +528,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qEvapSoiVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qEvapSoiVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -523,6 +566,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[1] = GetInt("NetCDF.ChunkY");
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qEvapVegVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qEvapVegVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -560,6 +606,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qTranVegVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qTranVegVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -595,6 +644,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[1] = GetInt("NetCDF.ChunkY");
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qInflVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qInflVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -632,6 +684,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], sweVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],sweVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -668,6 +723,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], t_grndVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],t_grndVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -703,6 +761,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[1] = GetInt("NetCDF.ChunkY");
         chunksize[2] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qQirrVarID, NC_CHUNKED, chunksize);
+      }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qQirrVarID,0,1,compression_level);
       }
     }
     if (res == NC_ENAMEINUSE)
@@ -742,6 +803,9 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
         chunksize[3] = GetInt("NetCDF.ChunkX");
         nc_def_var_chunking(clmIDs[0], qQirrInstCLMVarID, NC_CHUNKED, chunksize);
       }
+      if (enable_netcdf_compression) {
+        nc_def_var_deflate(clmIDs[0],qQirrInstCLMVarID,0,1,compression_level);
+      }
     }
     if (res == NC_ENAMEINUSE)
     {
@@ -749,34 +813,41 @@ int LookUpCLMInventory(char * varName, varNCData **myVarNCData, int *clmIDs)
     }
     return qQirrInstCLMVarID;
   }
+
+  return 0;
+#else
+  return 0;  
 #endif
 }
 
 void PutCLMDataInNC(int varID, Vector *v, double t, varNCData *myVarNCData, int dimensionality, int *clmIDs)
 {
 #ifdef PARFLOW_HAVE_NETCDF
-  static int counter = 0;
   if (strcmp(myVarNCData->varName, "time") == 0)
   {
-    long end[MAX_NC_VARS];
+    unsigned long end[MAX_NC_VARS];
     nc_var_par_access(clmIDs[0], varID, NC_COLLECTIVE);
     find_variable_length(clmIDs[0], varID, end);
     size_t start[myVarNCData->dimSize], count[myVarNCData->dimSize];
     start[0] = end[0]; count[0] = 1;
     int status = nc_put_vara_double(clmIDs[0], varID, start, count, &t);
+    if (status != NC_NOERR)
+    {
+      printf("Error: nc_put_vara_double failed, error code=%d\n", status);
+    }
   }
   else
   {
     if (dimensionality == 3)
     {
-      long end[MAX_NC_VARS];
+      unsigned long end[MAX_NC_VARS];
       nc_var_par_access(clmIDs[0], varID, NC_COLLECTIVE);
       find_variable_length(clmIDs[0], varID, end);
       size_t start[myVarNCData->dimSize], count[myVarNCData->dimSize];
 
       Grid *grid = VectorGrid(v);
       SubgridArray *subgrids = GridSubgrids(grid);
-      Subgrid *subgrid;
+      Subgrid *subgrid = NULL;
       Subvector *subvector;
       int g;
 
@@ -797,6 +868,7 @@ void PutCLMDataInNC(int varID, Vector *v, double t, varNCData *myVarNCData, int 
 
       int nx_v = SubvectorNX(subvector);
       int ny_v = SubvectorNY(subvector);
+      int nz_v = SubvectorNZ(subvector);
 
       int i, j, k, d, ai;
       double *data;
@@ -809,18 +881,22 @@ void PutCLMDataInNC(int varID, Vector *v, double t, varNCData *myVarNCData, int 
       start[0] = end[0] - 1; start[1] = iz; start[2] = iy; start[3] = ix;
       count[0] = 1; count[1] = nz; count[2] = ny; count[3] = nx;
       int status = nc_put_vara_double(clmIDs[0], varID, start, count, &data_nc[0]);
+      if (status != NC_NOERR)
+      {
+	printf("Error: nc_put_vara_double failed, error code=%d\n", status);
+      }
       free(data_nc);
     }
     else if (dimensionality == 2)
     {
-      long end[MAX_NC_VARS];
+      unsigned long end[MAX_NC_VARS];
       nc_var_par_access(clmIDs[0], varID, NC_COLLECTIVE);
       find_variable_length(clmIDs[0], varID, end);
       size_t start[myVarNCData->dimSize], count[myVarNCData->dimSize];
 
       Grid *grid = VectorGrid(v);
       SubgridArray *subgrids = GridSubgrids(grid);
-      Subgrid *subgrid;
+      Subgrid *subgrid = NULL;
       Subvector *subvector;
       int g;
 
@@ -841,6 +917,7 @@ void PutCLMDataInNC(int varID, Vector *v, double t, varNCData *myVarNCData, int 
 
       int nx_v = SubvectorNX(subvector);
       int ny_v = SubvectorNY(subvector);
+      int nz_v = SubvectorNZ(subvector);
 
       int i, j, k, d, ai;
       double *data;
@@ -853,6 +930,10 @@ void PutCLMDataInNC(int varID, Vector *v, double t, varNCData *myVarNCData, int 
       start[0] = end[0] - 1; start[1] = iy; start[2] = ix;
       count[0] = 1; count[1] = ny; count[2] = nx;
       int status = nc_put_vara_double(clmIDs[0], varID, start, count, &data_nc[0]);
+      if (status != NC_NOERR)
+      {
+	printf("Error: nc_put_vara_double failed, error code=%d\n", status);
+      }
       free(data_nc);
     }
   }

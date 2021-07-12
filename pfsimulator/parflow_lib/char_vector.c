@@ -198,7 +198,7 @@ CharVector  *NewCharVector(
 
 
   new_char_vector = NewTempCharVector(grid, nc, num_ghost);
-  data = amps_CTAlloc(char, SizeOfCharVector(new_char_vector));
+  data = ctalloc_amps(char, SizeOfCharVector(new_char_vector));
   SetTempCharVectorData(new_char_vector, data);
 
   return new_char_vector;
@@ -238,7 +238,7 @@ void FreeTempCharVector(
 void     FreeCharVector(
                         CharVector *charvector)
 {
-  amps_TFree(CharVectorData(charvector));
+  tfree_amps(CharVectorData(charvector));
   FreeTempCharVector(charvector);
 }
 
@@ -307,8 +307,6 @@ void InitCharVectorAll(CharVector *v, char value)
   Subcharvector  *v_sub;
   char     *vp;
 
-  Subgrid    *subgrid;
-
   int ix_v, iy_v, iz_v;
   int nx_v, ny_v, nz_v;
 
@@ -318,8 +316,6 @@ void InitCharVectorAll(CharVector *v, char value)
 
   ForSubgridI(i_s, GridSubgrids(grid))
   {
-    subgrid = GridSubgrid(grid, i_s);
-
     v_sub = CharVectorSubcharvector(v, i_s);
 
     ix_v = SubcharvectorIX(v_sub);

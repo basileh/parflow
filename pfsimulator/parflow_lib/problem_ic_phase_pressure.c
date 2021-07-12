@@ -838,7 +838,7 @@ PFModule  *ICPhasePressureInitInstanceXtra(
   if (PFModuleInstanceXtra(this_module) == NULL)
   {
     (instance_xtra->phase_density) =
-      PFModuleNewInstance(ProblemPhaseDensity(problem), ());
+      PFModuleNewInstanceType(NewDefault, ProblemPhaseDensity(problem), ());
   }
   else
   {
@@ -880,7 +880,7 @@ void  ICPhasePressureFreeInstanceXtra()
 
     PFModuleFreeInstance(instance_xtra->phase_density);
 
-    free(instance_xtra);
+    tfree(instance_xtra);
   }
 }
 

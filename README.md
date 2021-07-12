@@ -1,6 +1,6 @@
 # ParFlow
 
-[![Build Status](https://travis-ci.org/parflow/parflow.svg?branch=master)](https://travis-ci.org/parflow/parflow)
+![ParFlow CI Test](https://github.com/parflow/parflow/workflows/ParFlow%20CI%20Test/badge.svg)
 
 ParFlow is an open-source, modular, parallel watershed flow model. It
 includes fully-integrated overland flow, the ability to simulate
@@ -12,6 +12,12 @@ multi-institutional development history and is now a collaborative
 effort between CSM, LLNL, UniBonn and UCB. ParFlow has been coupled to
 the mesoscale, meteorological code ARPS and the NCAR code WRF.
 
+For an overview of the major features and capabilities see the
+following paper: [Simulating coupled surface–subsurface flows with
+ParFlow v3.5.0: capabilities, applications, and ongoing development of
+an open-source, massively parallel, integrated hydrologic
+model](https://www.geosci-model-dev.net/13/1373/2020/gmd-13-1373-2020.pdf).
+
 The Parflow User Manual is available at [Parflow Users
 Manual](https://github.com/parflow/parflow/blob/master/parflow-manual.pdf).
 The manual contains additional documentation on how to use ParFlow and
@@ -19,9 +25,14 @@ setup input files.  A quick start is included below.
 
 ### Citing Parflow
 
-To cite Parflow, please use the following reference.
+If you want the DOI for a specific release see:
+[Zendo](https://zenodo.org/search?page=1&size=20&q=parflow&version)
 
-If you use ParFlow in a publication, please cite the these papers that describe model physics:
+A generic DOI that always links to the most current release :
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4816884.svg)](https://doi.org/10.5281/zenodo.4816884)
+
+If you use ParFlow in a publication and wish to cite a paper reference
+please use the following that describe model physics:
 
 * Ashby S.F. and R.D. Falgout, Nuclear Science and Engineering 124:145-159, 1996
 * Jones, J.E. and C.S. Woodward, Advances in Water Resources 24:763-774, 2001
@@ -39,9 +50,10 @@ two additional papers that describe the coupled model physics:
 The ParFlow website has additional information on the project:
 - [Parflow Web Site](https://parflow.org/)
 
-You can join the Parflow mailing list to communicate with the Parflow
-developers and users.  Join our mailing list over via:
-- [Parflow-Users](https://mailman.mines.edu/mailman/listinfo/parflow-users)
+You can join the Parflow Google Group/mailing list to communicate with
+the Parflow developers and users.  In order to post you will have to
+join the group, old posts are visible without joining:
+- [Parflow-Users](https://groups.google.com/g/parflow)
 
 A Parflow blog is available with notes from users on how to compile and use Parflow:
 - [Parflow Blog](http://parflow.blogspot.com/)
@@ -147,14 +159,14 @@ https://cmake.org/runningcmake/
 #### Building with the cmake command line
 
 CMake may also be configured from the command line using the cmake
-command.  The default will configure a sequential version of ParFlow
+command. Instructions to build with different accelerator backends are found from the following documents: [CUDA, KOKKOS](README-GPU.md), [OpenMP](README-OPENMP.md). The default will configure a sequential version of ParFlow
 using MPI libraries.  CLM is being enabled.
 
 ```shell
    mkdir build
    cd build
    cmake ../parflow \
-   	 -DCMAKE_INSTALL_PREFIX=$(PARFLOW_DIR) \
+   	 -DCMAKE_INSTALL_PREFIX=${PARFLOW_DIR} \
    	 -DPARFLOW_HAVE_CLM=ON
 ```
 
@@ -173,7 +185,7 @@ is a minimal example of an MPI build with CLM:
    mkdir build
    cd build
    cmake ../parflow \
-      	 -DCMAKE_INSTALL_PREFIX=$(PARFLOW_DIR) \
+      	 -DCMAKE_INSTALL_PREFIX=${PARFLOW_DIR} \
    	 -DPARFLOW_HAVE_CLM=ON \
 	 -DPARFLOW_AMPS_LAYER=mpi1
 ```
@@ -186,14 +198,13 @@ packages are being specified and some features are being enabled:
    cd build
    cmake ../parflow \
         -DPARFLOW_AMPS_LAYER=mpi1 \
-	-DHYPRE_ROOT=$(PARFLOW_HYPRE_DIR) \
-	-DHDF5_ROOT=$(PARFLOW_HDF5_DIR) \
-	-DSILO_ROOT=$(PARFLOW_SILO_DIR) \
-	-DSUNDIALS_ROOT=$(PARFLOW_SUNDIALS_DIR) \
+	-DHYPRE_ROOT=${PARFLOW_HYPRE_DIR} \
+	-DHDF5_ROOT=${PARFLOW_HDF5_DIR} \
+	-DSILO_ROOT=${PARFLOW_SILO_DIR} \
 	-DCMAKE_BUILD_TYPE=Debug \
 	-DPARFLOW_ENABLE_TIMING=TRUE \
 	-DPARFLOW_HAVE_CLM=ON \
-	-DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR)
+	-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
 ```
 
 ### Step 4: Building and installing
@@ -212,8 +223,8 @@ easy:
 If all went well a sample ParFlow problem can be run using:
 
 ```shell
-cd parflow/test
-tclsh default_single.tcl 1 1 1
+   cd parflow/test
+   tclsh default_single.tcl 1 1 1
 ```
 
 Note that the environment variable `PAFLOW_DIR` must be set for this
@@ -241,11 +252,11 @@ building of the documentation.
    cmake ../parflow \
         <other cmake options> \
 	-DPARFLOW_ENABLE_LATEX=TRUE \
-	-DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR)
+	-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
 ```
 
 When make is run the documenation will be built and installed in
-$(INSTALL_DIR)/docs/user_manual.pdf.
+${INSTALL_DIR}/docs/user_manual.pdf.
 
 ### Code documentation
 
@@ -262,6 +273,24 @@ run the Doxygen code documenation is built with:
 
 HTML pages are generated in the build/docs/doxygen/html directory.
 
+### ParFlow keys documentation
+
+```shell
+   cmake \
+      -S ./parflow \
+      -B ./build-docker \
+      -D BUILD_TESTING=OFF \
+      -D PARFLOW_ENABLE_TOOLS=OFF \
+      -D PARFLOW_ENABLE_SIMULATOR=OFF \
+      -D PARFLOW_ENABLE_KEYS_DOC=ON \
+      -D PARFLOW_ENABLE_PYTHON=ON \
+      -D PARFLOW_PYTHON_VIRTUAL_ENV=ON
+
+    cd ./build-docker && make ParFlowKeyDoc
+
+    open ./build-docker/docs/pf-keys/build-site/index.html
+```	
+
 ## Configure options
 
 A number of packages are optional for building ParFlow.  The optional
@@ -272,7 +301,29 @@ in standard locations.  Explicitly setting the location using the ROOT
 variable for a package automatically enables it, you don't need to
 specify both values.
 
-### How to specify command to run MPI applications
+Here are some common packages:
+
+- __SIMULATOR__: The simulator is actually the core of ParFlow as it represent the simulation code.
+- __DOCKER__: This provide helpers for building docker images with ParFlow enable in them.
+- __DOXYGEN__: Doxygen and building of code documentation (C/Fortran).
+- __ETRACE__: builds ParFlow with etrace
+- __HDF5__: builds ParFlow with HDF5 which is required for the _NETCDF_ file format.
+- __HYPRE__: builds ParFlow with Hypre
+- __KEYS_DOC__: builds documentation (rst files) from key definitions.
+- __LATEX__: enables LaTEX and building of documentation (Manual PDF)
+- __NETCDF__: builds ParFlow with NetCDF. (If ON, HDF5 is required)
+- __PROFILING__: This allow to enable extra code execution that would enable code profiling.
+- __TIMING__: enables timing of key Parflow functions; may slow down performance
+- __TOOLS__: enables building of the Parflow tools (TCL version)
+- __VALGRIND__: builds ParFlow with Valgrind support
+- __PYTHON__: This is to enable you to build the Python version of __pftools__.
+- __SILO__: builds ParFlow with Silo.
+- __SLURM__: builds ParFlow with SLURM support (SLURM is queuing system on HPC).
+- __SUNDIALS__: builds ParFlow with SUNDIALS
+- __SZLIB__: builds ParFlow with SZlib compression library
+- __ZLIB__: builds ParFlow with Zlib compression library
+
+### How to specify the launcher command used to run MPI applications
 
 There are multiple ways to run MPI applications such as mpiexec,
 mpirun, srun, and aprun.  The command used is dependent on the job
@@ -365,7 +416,7 @@ you will need to modify the 'Dockerfile' file.
 
 ### Unix/Linux/MacOS
 
-```bash
+```shell
 ./bin/docker-build.sh
 ```
 
@@ -375,9 +426,29 @@ you will need to modify the 'Dockerfile' file.
 .\bin\docker-build.bat
 ```
 
+## Building the Docker image with CMake (expirmental)
+
+Rather than building ParFlow on your computer, you can use the build
+system to create a container and build ParFlow in it.
+
+```shell
+cmake \
+   -S ./parflow \
+   -B ./build-docker \
+   -D BUILD_TESTING=OFF \
+   -D PARFLOW_ENABLE_TOOLS=OFF \
+   -D PARFLOW_ENABLE_SIMULATOR=OFF \
+   -D PARFLOW_ENABLE_DOCKER=ON
+
+cd ./build-docker && make DockerBuildRuntime
+```
+
+For more information look into our [Docker Readme](./docker/README.md)
+
+
 ## Release
 
-Copyright (c) 1995-2019, Lawrence Livermore National Security LLC. 
+Copyright (c) 1995-2021, Lawrence Livermore National Security LLC. 
 
 Produced at the Lawrence Livermore National Laboratory. 
 

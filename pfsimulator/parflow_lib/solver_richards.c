@@ -171,6 +171,7 @@ typedef struct {
   int write_silopmpio_CLM;      /* write CLM output as silo as PMPIO? */
   int print_CLM;                /* print CLM output as PFB? */
   int write_CLM_binary;         /* write binary output (**default**)? */
+  int slope_accounting_CLM;     /* account for slopes in energy budget */
 
   int single_clm_file;          /* NBE: Write all CLM outputs into a single multi-layer PFB */
 
@@ -469,27 +470,29 @@ SetupRichards(PFModule * this_module)
   /* Write subsurface data */
   if (public_xtra->print_subsurf_data)
   {
-    sprintf(file_postfix, "perm_x");
+    strcpy(file_postfix, "perm_x");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataPermeabilityX(problem_data));
 
-    sprintf(file_postfix, "perm_y");
+    strcpy(file_postfix, "perm_y");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataPermeabilityY(problem_data));
 
-    sprintf(file_postfix, "perm_z");
+    strcpy(file_postfix, "perm_z");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataPermeabilityZ(problem_data));
 
-    sprintf(file_postfix, "porosity");
+    strcpy(file_postfix, "porosity");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataPorosity(problem_data));
 
     // IMF -- added specific storage to subsurface bundle
-    sprintf(file_postfix, "specific_storage");
+    strcpy(file_postfix, "specific_storage");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataSpecificStorage(problem_data));
 
+    PFModuleOutputStaticType(SaturationOutputStaticInvoke, ProblemSaturation(problem), (file_prefix, problem_data));
+    
     // Now add metadata entries:
     static const char* permeability_filenames[] = {
       "perm_x", "perm_y", "perm_z"
@@ -517,28 +520,28 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->write_silo_subsurf_data)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "perm_x");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "perm_x");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataPermeabilityX(problem_data), t, 0,
               "PermeabilityX");
 
-    sprintf(file_type, "perm_y");
+    strcpy(file_type, "perm_y");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataPermeabilityY(problem_data), t, 0,
               "PermeabilityY");
 
-    sprintf(file_type, "perm_z");
+    strcpy(file_type, "perm_z");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataPermeabilityZ(problem_data), t, 0,
               "PermeabilityZ");
 
-    sprintf(file_type, "porosity");
+    strcpy(file_type, "porosity");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataPorosity(problem_data), t, 0, "Porosity");
 
     // IMF -- added specific storage to subsurface bundle
-    sprintf(file_type, "specific_storage");
+    strcpy(file_type, "specific_storage");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataSpecificStorage(problem_data), t, 0,
               "SpecificStorage");
@@ -546,28 +549,28 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->write_silopmpio_subsurf_data)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "perm_x");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "perm_x");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataPermeabilityX(problem_data), t, 0,
                    "PermeabilityX");
 
-    sprintf(file_type, "perm_y");
+    strcpy(file_type, "perm_y");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataPermeabilityY(problem_data), t, 0,
                    "PermeabilityY");
 
-    sprintf(file_type, "perm_z");
+    strcpy(file_type, "perm_z");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataPermeabilityZ(problem_data), t, 0,
                    "PermeabilityZ");
 
-    sprintf(file_type, "porosity");
+    strcpy(file_type, "porosity");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataPorosity(problem_data), t, 0, "Porosity");
 
     // IMF -- added specific storage to subsurface bundle
-    sprintf(file_type, "specific_storage");
+    strcpy(file_type, "specific_storage");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataSpecificStorage(problem_data), t, 0,
                    "SpecificStorage");
@@ -576,11 +579,11 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->print_slopes)
   {
-    sprintf(file_postfix, "slope_x");
+    strcpy(file_postfix, "slope_x");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataTSlopeX(problem_data));
 
-    sprintf(file_postfix, "slope_y");
+    strcpy(file_postfix, "slope_y");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataTSlopeY(problem_data));
 
@@ -595,31 +598,31 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->write_silo_slopes)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "slope_x");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "slope_x");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataTSlopeX(problem_data), t, 0, "SlopeX");
 
-    sprintf(file_type, "slope_y");
+    strcpy(file_type, "slope_y");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataTSlopeY(problem_data), t, 0, "SlopeY");
   }
 
   if (public_xtra->write_silopmpio_slopes)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "slope_x");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "slope_x");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataTSlopeX(problem_data), t, 0, "SlopeX");
 
-    sprintf(file_type, "slope_y");
+    strcpy(file_type, "slope_y");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataTSlopeY(problem_data), t, 0, "SlopeY");
   }
 
   if (public_xtra->print_mannings)
   {
-    sprintf(file_postfix, "mannings");
+    strcpy(file_postfix, "mannings");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataMannings(problem_data));
 
@@ -634,23 +637,23 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->write_silo_mannings)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "mannings");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "mannings");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataMannings(problem_data), t, 0, "Mannings");
   }
 
   if (public_xtra->write_silopmpio_mannings)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "mannings");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "mannings");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    ProblemDataMannings(problem_data), t, 0, "Mannings");
   }
 
   if (public_xtra->print_dzmult)
   {
-    sprintf(file_postfix, "dz_mult");
+    strcpy(file_postfix, "dz_mult");
     WritePFBinary(file_prefix, file_postfix, instance_xtra->dz_mult);
 
     static const char* dzmult_filenames[] = {
@@ -664,16 +667,16 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->write_silo_dzmult)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "dz_mult");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "dz_mult");
     WriteSilo(file_prefix, file_type, file_postfix, instance_xtra->dz_mult,
               t, 0, "DZ_Multiplier");
   }
 
   if (public_xtra->write_silopmpio_dzmult)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "dz_mult");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "dz_mult");
     WriteSiloPMPIO(file_prefix, file_type, file_postfix,
                    instance_xtra->dz_mult, t, 0, "DZ_Multiplier");
   }
@@ -683,7 +686,7 @@ SetupRichards(PFModule * this_module)
   // Left keys for individual printing for backward compatibility
   if (public_xtra->print_specific_storage)
   {
-    sprintf(file_postfix, "specific_storage");
+    strcpy(file_postfix, "specific_storage");
     WritePFBinary(file_prefix, file_postfix,
                   ProblemDataSpecificStorage(problem_data));
 
@@ -702,8 +705,8 @@ SetupRichards(PFModule * this_module)
 
   if (public_xtra->write_silo_specific_storage)
   {
-    sprintf(file_postfix, "");
-    sprintf(file_type, "specific_storage");
+    strcpy(file_postfix, "");
+    strcpy(file_type, "specific_storage");
     WriteSilo(file_prefix, file_type, file_postfix,
               ProblemDataSpecificStorage(problem_data), t, 0,
               "SpecificStorage");
@@ -712,15 +715,15 @@ SetupRichards(PFModule * this_module)
   if (public_xtra->print_top)
   {
     printf("PrintTop -- not yet implemented\n");
-    // sprintf(file_postfix, "top");
+    // strcpy(file_postfix, "top");
     // WritePFBinary(file_prefix, file_postfix, XXXXXXXXXXXXXXXX(problem_data));
   }
 
   if (public_xtra->write_silo_top)
   {
     printf("WriteSiloTop -- not yet implemented\n");
-    // sprintf(file_postfix, "");
-    // sprintf(file_type, "top");
+    // strcpy(file_postfix, "");
+    // strcpy(file_type, "top");
     // WriteSilo(file_prefix, file_type, file_postfix, XXXXXXXXXXXXXXXXXXXXX(problem_data),
     //          t, 0, "Top");
   }
@@ -1125,10 +1128,10 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &displa);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 19; c++) /*BH 18->19 to add extra vegetation class*/
+          for (c = 0; c < 18; c++)
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->displa1d)[19 * n + c] = displa; /*BH 18->19 to add extra vegetation class*/
+            (public_xtra->displa1d)[18 * n + c] = displa;
           }
         }
         amps_FreeInvoice(invoice);
@@ -1548,7 +1551,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   int fflag, fstart, fstop;     // IMF: index w/in 3D forcing array corresponding to istep
   int n, c;                     // IMF: index vars for looping over subgrid data BH: added c
   int ind_veg;                  /*BH: temporary variable to store vegetation index */
-  double sw, lw, prcp, tas, u, v, patm, qatm;   // IMF: 1D forcing vars (local to AdvanceRichards)
+  double sw=NAN, lw=NAN, prcp=NAN, tas=NAN, u=NAN, v=NAN, patm=NAN, qatm=NAN;   // IMF: 1D forcing vars (local to AdvanceRichards)
   double lai[19], sai[19], z0m[19], displa[19]; /*BH: array with lai/sai/z0m/displa values for each veg class */
   double *sw_data = NULL;
   double *lw_data = NULL;
@@ -1566,12 +1569,17 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   char filename[2048];          // IMF: 1D input file name *or* 2D/3D input file base name
   Subvector *sw_forc_sub, *lw_forc_sub, *prcp_forc_sub, *tas_forc_sub, *u_forc_sub, *v_forc_sub, *patm_forc_sub, *qatm_forc_sub, *lai_forc_sub, *sai_forc_sub, *z0m_forc_sub, *displa_forc_sub, *veg_map_forc_sub;      /*BH: added LAI/SAI/Z0M/DISPLA/vegmap */
 
+  /* Slopes */
+  Subvector *slope_x_sub, *slope_y_sub;
+  double *slope_x_data, *slope_y_data;
+
   /* IMF: For writing CLM output */
   Subvector *eflx_lh_tot_sub, *eflx_lwrad_out_sub, *eflx_sh_tot_sub,
     *eflx_soil_grnd_sub, *qflx_evap_tot_sub, *qflx_evap_grnd_sub,
     *qflx_evap_soi_sub, *qflx_evap_veg_sub, *qflx_tran_veg_sub,
     *qflx_infl_sub, *swe_out_sub, *t_grnd_sub, *tsoil_sub, *irr_flag_sub,
     *qflx_qirr_sub, *qflx_qirr_inst_sub;
+
   double *eflx_lh, *eflx_lwrad, *eflx_sh, *eflx_grnd, *qflx_tot, *qflx_grnd,
     *qflx_soi, *qflx_eveg, *qflx_tveg, *qflx_in, *swe, *t_g, *t_soi, *iflag,
     *qirr, *qirr_inst;
@@ -1581,7 +1589,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   int rank;
   int any_file_dumped;
   int clm_file_dumped;
-  int dump_files;
+  int dump_files = 0;
   int clm_dump_files;
   int retval;
   int converged;
@@ -1608,6 +1616,8 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   int Stepcount, Loopcount;
   Stepcount = 0;
   Loopcount = 0;
+
+  int first_tstep = 1;
 
   sprintf(file_prefix, "%s", GlobalsOutFileName);
 
@@ -2177,6 +2187,12 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         veg_map_forc_sub =
           VectorSubvector(instance_xtra->veg_map_forc, is);
 
+        /* Slope */
+        slope_x_sub = VectorSubvector(ProblemDataTSlopeX(problem_data), is);
+        slope_y_sub = VectorSubvector(ProblemDataTSlopeY(problem_data), is);
+        slope_x_data = SubvectorData(slope_x_sub);
+        slope_y_data = SubvectorData(slope_y_sub);
+
         nx = SubgridNX(subgrid);
         ny = SubgridNY(subgrid);
         nz = SubgridNZ(subgrid);
@@ -2333,8 +2349,9 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                          nx_f, ny_f, nz_f, nz_rz, ip, p, q, r, gnx,
                          gny, rank, sw_data, lw_data, prcp_data,
                          tas_data, u_data, v_data, patm_data,
-                         qatm_data, lai_data, sai_data, z0m_data,
-                         displa_data, eflx_lh, eflx_lwrad, eflx_sh,
+                         qatm_data, lai_data, sai_data, z0m_data, displa_data,
+                         slope_x_data, slope_y_data,
+                         eflx_lh, eflx_lwrad, eflx_sh,
                          eflx_grnd, qflx_tot, qflx_grnd, qflx_soi,
                          qflx_eveg, qflx_tveg, qflx_in, swe, t_g,
                          t_soi, public_xtra->clm_dump_interval,
@@ -2344,6 +2361,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                          clm_file_dir_length,
                          public_xtra->clm_bin_out_dir,
                          public_xtra->write_CLM_binary,
+                         public_xtra->slope_accounting_CLM,
                          public_xtra->clm_beta_function,
                          public_xtra->clm_veg_function,
                          public_xtra->clm_veg_wilting,
@@ -2386,7 +2404,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       /******************************************/
       if (public_xtra->nc_evap_trans_file_transient)
       {
-        sprintf(filename, public_xtra->nc_evap_trans_filename);
+        strcpy(filename, public_xtra->nc_evap_trans_filename);
         /*KKu: evaptrans is the name of the variable expected in NetCDF file */
         /*Here looping similar to pfb is not implemented. All steps are assumed to be
          * present in the single NetCDF file*/
@@ -3662,6 +3680,10 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
      * remaining time in job is less than user specified value.
      * Used to halt jobs gracefully when running on batch systems.
      */
+
+    int dump_interval_execution_time_limit =
+      ProblemDumpIntervalExecutionTimeLimit(problem);
+
     if (dump_files && dump_interval_execution_time_limit)
     {
       if (!amps_Rank(amps_CommWorld))
@@ -3684,8 +3706,17 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       }
     }
 #endif
+    if(first_tstep)
+    {
+      BeginTiming(RichardsExclude1stTimeStepIndex);
+      PUSH_NVTX("RichardsExclude1stTimeStepIndex",6)
+      first_tstep = 0;
+    }
   }                             /* ends do for time loop */
   while (take_more_time_steps);
+
+  EndTiming(RichardsExclude1stTimeStepIndex);
+  POP_NVTX
 
   /***************************************************************/
   /*                 Print the pressure and saturation           */
@@ -4754,6 +4785,17 @@ SolverRichardsNewPublicXtra(char *name)
                switch_name, key);
   }
   public_xtra->write_CLM_binary = switch_value;
+  
+/* IMF Account for slope in CLM energy budget (default=False) */
+  sprintf(key, "%s.CLM.UseSlopeAspect", name);
+  switch_name = GetStringDefault(key, "False");
+  switch_value = NA_NameToIndex(switch_na, switch_name);
+  if (switch_value < 0)
+  {
+    InputError("Error: invalid value <%s> for key <%s>\n",
+               switch_name, key);
+  }
+  public_xtra->slope_accounting_CLM = switch_value;
 
   /* IMF Key for CLM met file path */
   sprintf(key, "%s.CLM.MetFilePath", name);
