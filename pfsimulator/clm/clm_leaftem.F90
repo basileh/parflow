@@ -191,7 +191,7 @@ subroutine clm_leaftem (z0mv,       z0hv,       z0qv,           &
   real(r8) po2                 ! partial pressure  o2 (mol/mol)
   real(r8) pco2                ! partial pressure co2 (mol/mol)
 
-  data po2,pco2 /0.209,355.e-06/
+  data po2,pco2 /0.209,400.e-06/ !BH 355.10-6 -> 400.e10-6 for ~2015 like simulations (in AH 355 or 390)
 
   real(r8) co2                 ! atmospheric co2 concentration (pa)
   real(r8) o2                  ! atmospheric o2 concentration (pa)

@@ -251,7 +251,7 @@ subroutine drv_clmini (drv, grid, tile, clm, istep_pf)
   clm%qe25   =  0.06     ! quantum efficiency at 25c (umol co2 / umol photon)      
   clm%ko25   =  30000.   ! o2 michaelis-menten constant at 25c (pa)                
   clm%kc25   =  30.      ! co2 michaelis-menten constant at 25c (pa)               
-  clm%vcmx25 =  33.      ! maximum rate of carboxylation at 25c (umol co2/m**2/s)  
+  clm%vcmx25 =  51.6     ! maximum rate of carboxylation at 25c (umol co2/m**2/s)  !BH
   clm%ako    =  1.2      ! q10 for ko25                                            
   clm%akc    =  2.1      ! q10 for kc25                                            
   clm%avcmx  =  2.4      ! q10 for vcmx25                                          
