@@ -1040,7 +1040,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-
+        /* tmp !!! BH */
+        printf("All set: LAI\n");
         /*Reading file SAI */ /*BH*/
         /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
@@ -1072,7 +1073,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-
+        /* tmp !!! BH */
+        printf("All set: SAI\n");
         /*Reading file z0m */ /*BH*/
         /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
@@ -1104,7 +1106,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-
+        /* tmp !!! BH */
+        printf("All set: Z0M\n");
         /*Reading file displa */ /*BH*/
         /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
@@ -1128,15 +1131,16 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &displa);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++) /*BH 18 -> 19 add extra vegetation class*/
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->displa1d)[18 * n + c] = displa;
+            (public_xtra->displa1d)[19 * n + c] = displa; /*BH 18 -> 19 add extra vegetation class*/
           }
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-
+        /* tmp !!! BH */
+        printf("All set: DISPLA\n");
         /*Reading file vegetation map *//* BH */
 
         sprintf(filename, "%s/%s.pfb", public_xtra->clm_metpath,
