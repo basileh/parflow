@@ -1040,9 +1040,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-        /* tmp !!! BH */
-        printf("All set: LAI\n");
-        /*Reading file SAI */ /*BH*/
+        
+	/*Reading file SAI */ /*BH*/
         /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
                 "sai.dat");
@@ -1073,9 +1072,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-        /* tmp !!! BH */
-        printf("All set: SAI\n");
-        /*Reading file z0m */ /*BH*/
+        
+	/*Reading file z0m */ /*BH*/
         /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
                 "z0m.dat");
@@ -1106,9 +1104,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-        /* tmp !!! BH */
-        printf("All set: Z0M\n");
-        /*Reading file displa */ /*BH*/
+        
+	/*Reading file displa */ /*BH*/
         /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
                 "displa.dat");
@@ -1139,9 +1136,8 @@ SetupRichards(PFModule * this_module)
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
-        /* tmp !!! BH */
-        printf("All set: DISPLA\n");
-        /*Reading file vegetation map *//* BH */
+        
+	/*Reading file vegetation map *//* BH */
 
         sprintf(filename, "%s/%s.pfb", public_xtra->clm_metpath,
                 "veg_map");
