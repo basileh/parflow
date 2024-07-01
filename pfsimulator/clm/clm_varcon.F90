@@ -74,16 +74,20 @@ module clm_varcon
   integer, private :: i  ! loop index
 
 ! saturated soil albedos for 8 color classes: 1=vis, 2=nir
-
+! LRH (MT) modifie en remplaçant premières valeurs des deux lignes 
   real(r8) :: albsat(numcol,numrad) !wet soil albedo by color class and waveband
-  data(albsat(i,1),i=1,8)/0.12,0.11,0.10,0.09,0.08,0.07,0.06,0.05/
-  data(albsat(i,2),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/
+  !  data(albsat(i,1),i=1,8)/0.12,0.11,0.10,0.09,0.08,0.07,0.06,0.05/
+  !  data(albsat(i,2),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/
+  data(albsat(i,1),i=1,8)/0.126,0.135,0.10,0.09,0.08,0.07,0.06,0.05/
+  data(albsat(i,2),i=1,8)/0.252,0.27,0.20,0.18,0.16,0.14,0.12,0.10/
 
 ! dry soil albedos for 8 color classes: 1=vis, 2=nir 
-
+! LRH (MT) modifie en remplaçant premières valeurs des deux lignes 
   real(r8) :: albdry(numcol,numrad) !dry soil albedo by color class and waveband
-  data(albdry(i,1),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/
-  data(albdry(i,2),i=1,8)/0.48,0.44,0.40,0.36,0.32,0.28,0.24,0.20/
+  data(albdry(i,1),i=1,8)/0.345,0.326,0.20,0.18,0.16,0.14,0.12,0.10/
+  data(albdry(i,2),i=1,8)/0.69,0.652,0.40,0.36,0.32,0.28,0.24,0.20/
+!  data(albdry(i,1),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/
+!  data(albdry(i,2),i=1,8)/0.48,0.44,0.40,0.36,0.32,0.28,0.24,0.20/
 
 ! albedo land ice: 1=vis, 2=nir
 

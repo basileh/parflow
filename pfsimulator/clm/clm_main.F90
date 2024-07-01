@@ -1,6 +1,6 @@
 !#include <misc.h>
 
-subroutine clm_main (clm,day,gmt)
+subroutine clm_main (clm,day,gmt,clm_snow_frac)
 
   ! CLM Model/Science PHILOSOPHY:
   !   The Common Land Model (CLM) is being developed by a
@@ -58,7 +58,7 @@ subroutine clm_main (clm,day,gmt)
   ! DESCRIPTION of clm_main.f90:
   !  CLM 1-D model to advance land states at 1 point, 1 timestep into the future.
   !  It is intended that NO USER MODIFICATION at and below this subroutine
-  !  be required to run CLM for any application.  The input starting time in the 
+  !  be required to run CLM for any applicatisnow_fracon.  The input starting time in the 
   !  CLM is GMT, and the model time is GMT.  
   !
   ! clm_main FLOW DIAGRAM
@@ -165,6 +165,8 @@ subroutine clm_main (clm,day,gmt)
   type (clm1d), intent(inout) :: clm    !CLM 1-D Module
   real(r8)    , intent(in)    :: day    !needed for zenith angle calc
   real(r8)    , intent(in)    :: gmt    !needed for irrigation schedule @IMF
+  integer     , intent(in)    :: clm_snow_frac  ! MC (LRH): whether snow fraction is (de)activated on a pixel 0=deactivated, 1=activated */
+
   ! -----------------------------------------------------------------
 
   ! ------------------- local ---------------------------------------
@@ -175,8 +177,7 @@ subroutine clm_main (clm,day,gmt)
   ! -----------------------------------------------------------------
   ! Ecosystem dynamics: phenology, vegetation, soil carbon, snow frac
   ! -----------------------------------------------------------------
-
-  call clm_dynvegpar (clm)
+  call clm_dynvegpar (clm, clm_snow_frac)
   ! -----------------------------------------------------------------
   ! Albedos 
   ! -----------------------------------------------------------------
@@ -194,7 +195,6 @@ subroutine clm_main (clm,day,gmt)
   ! -----------------------------------------------------------------
   ! Initial set of previous time step variables 
   ! -----------------------------------------------------------------
-
   clm%h2osno_old = clm%h2osno  ! snow mass at previous time step
   clm%h2ocan_old = clm%h2ocan  ! depth of water on foliage at previous time step
   if (.not.clm%lakpoi) then
@@ -209,7 +209,6 @@ subroutine clm_main (clm,day,gmt)
   ! -----------------------------------------------------------------
   ! Energy AND Water balance for non-lake points
   ! -----------------------------------------------------------------
-
   if (.not. clm%lakpoi) then   
 
      ! determine beginning water balance for non-lake points

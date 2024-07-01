@@ -1,17 +1,18 @@
 !#include <misc.h>
-
+! vers Variable
 subroutine clm_lsm(pressure,saturation,evap_trans,topo,porosity,pf_dz_mult,istep_pf,dt,time,           &
 start_time,pdx,pdy,pdz,ix,iy,nx,ny,nz,nx_f,ny_f,nz_f,nz_rz,ip,npp,npq,npr,gnx,gny,rank,sw_pf,lw_pf,    &
 prcp_pf,tas_pf,u_pf,v_pf,patm_pf,qatm_pf,lai_pf,sai_pf,z0m_pf,displa_pf,                               &
 slope_x_pf,slope_y_pf,                                                                                 &
-eflx_lh_pf,eflx_lwrad_pf,eflx_sh_pf,eflx_grnd_pf,                                                     &
-qflx_tot_pf,qflx_grnd_pf,qflx_soi_pf,qflx_eveg_pf,qflx_tveg_pf,qflx_in_pf,swe_pf,t_g_pf,               &
-t_soi_pf,clm_dump_interval,clm_1d_out,clm_forc_veg,clm_output_dir,clm_output_dir_length,clm_bin_output_dir,         &
-write_CLM_binary,slope_accounting_CLM,beta_typepf,veg_water_stress_typepf,wilting_pointpf,field_capacitypf,                 &
+eflx_lh_pf,eflx_lwrad_pf,eflx_sh_pf,eflx_grnd_pf,                                                      &
+qflx_tot_pf,qflx_grnd_pf,qflx_soi_pf,qflx_eveg_pf,qflx_tveg_pf,qflx_in_pf,swe_pf,snd_pf,snoalb_pf,     &
+surfalb_pf,snowage_pf,ndvi_pf,qflx_snomelt_pf,t_g_pf,                                                  &!@LRH (JMC) add outputs 
+t_soi_pf,clm_dump_interval,clm_1d_out,clm_forc_veg,clm_prec_roots,clm_critic_temp,clm_snow_frac,       &
+clm_output_dir,clm_output_dir_length,clm_bin_output_dir,write_CLM_binary,                              &
+slope_accounting_CLM,beta_typepf,veg_water_stress_typepf,wilting_pointpf,field_capacitypf,             &
 res_satpf,irr_typepf, irr_cyclepf, irr_ratepf, irr_startpf, irr_stoppf, irr_thresholdpf,               &
 qirr_pf,qirr_inst_pf,irr_flag_pf,irr_thresholdtypepf,soi_z,clm_next,clm_write_logs,                    &
 clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
-
   !=========================================================================
   !
   !  CLMCLMCLMCLMCLMCLMCLMCLMCL  A community developed and sponsored, freely   
@@ -98,6 +99,14 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
   real(r8) :: qflx_tveg_pf((nx+2)*(ny+2)*3)      ! h2o_flux (veg-t) output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
   real(r8) :: qflx_in_pf((nx+2)*(ny+2)*3)        ! h2o_flux (infil) output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
   real(r8) :: swe_pf((nx+2)*(ny+2)*3)            ! swe              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+   !@LRH (JMC) add outputs
+  real(r8) :: snd_pf((nx+2)*(ny+2)*3)              ! snow depth              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+  real(r8) :: snoalb_pf((nx+2)*(ny+2)*3)           ! snow albedo              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+  real(r8) :: surfalb_pf((nx+2)*(ny+2)*3)          ! surface albedo              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+  real(r8) :: snowage_pf((nx+2)*(ny+2)*3)          ! snow adimensional age              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+  real(r8) :: ndvi_pf((nx+2)*(ny+2)*3)             ! ndvi              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+  real(r8) :: qflx_snomelt_pf((nx+2)*(ny+2)*3)     ! melt rate              output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
+!@LRH (JMC) end add outputs
   real(r8) :: t_g_pf((nx+2)*(ny+2)*3)            ! t_grnd           output var to send to ParFlow, on grid w/ ghost nodes for current proc but nz=1 (2D)
   real(r8) :: t_soi_pf((nx+2)*(ny+2)*(pf_nlevsoi+2))!tsoil             output var to send to ParFlow, on grid w/ ghost nodes for current proc, but nz=10 (3D)
   real(r8) :: sw_pf((nx+2)*(ny+2)*3)             ! SW rad, passed from PF
@@ -123,6 +132,9 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
   integer :: clm_dump_interval                  ! dump inteval for CLM output, passed from PF, always in interval of CLM timestep, not time
   integer  :: clm_1d_out                         ! whether to dump 1d output 0=no, 1=yes
   integer  :: clm_forc_veg                       ! BH: whether vegetation (LAI, SAI, z0m, displa) is being forced 0=no, 1=yes
+  integer  :: clm_prec_roots                     ! LRH: whether root distribution with no root just below the surface is being chosen 0=no, 1=yes
+  real(r8) :: clm_critic_temp                    ! MC (LRH): critical temperature for snow/rain partition */
+  integer  :: clm_snow_frac                      ! MC (LRH): whether snow partition/fraction is deactivated 0=snow partition deactivated, 1=snow partition activated */
   integer  :: clm_output_dir_length              ! for output directory
   integer  :: clm_bin_output_dir                 ! output directory
   integer  :: write_CLM_binary                   ! whether to write CLM output as binary 
@@ -163,11 +175,10 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
   save
 
   !=== End Variable List ===================================================
-
+  
   !=========================================================================
   !=== Initialize CLM
   !=========================================================================
-
   !=== Open CLM text output
   write(RI,*)  rank
 
@@ -321,7 +332,7 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
      if (clm_write_logs==1) write(999,*) "Initialize CLM and DIAG variables"
      do t=1,drv%nch 
         clm(t)%kpatch = t
-        call drv_clmini (drv, grid, tile(t), clm(t), istep_pf) !Initialize CLM Variables
+        call drv_clmini (drv, grid, tile(t), clm(t), istep_pf, clm_prec_roots, clm_snow_frac) !Initialize CLM Variables LRH MC added variables)
      enddo
 
      !=== Initialize the CLM topography mask 
@@ -433,14 +444,31 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
 		   !! BH: Overwrite Rootfr disttribution: start
            !! BH: the following overwrites the root fraction definition which is previously set up in drv_clmini.F90 
 		   !! BH: but based on constant DZ, regardless of pf_dz_mult.
-           do bj = 1, nlevsoi-1
-           clm(t)%rootfr(bj) = .5*( exp(-tile(t)%roota*clm(t)%zi(bj-1))  &
-                           + exp(-tile(t)%rootb*clm(t)%zi(bj-1))  &
-                           - exp(-tile(t)%roota*clm(t)%zi(bj  ))  &
-                           - exp(-tile(t)%rootb*clm(t)%zi(bj  )) )
-           enddo
-           clm(t)%rootfr(nlevsoi)=.5*( exp(-tile(t)%roota*clm(t)%zi(nlevsoi-1))&
-                               + exp(-tile(t)%rootb*clm(t)%zi(nlevsoi-1)))
+                  
+!! LRH modifies to allow an other root distribution, with no roots just below the surface, adapted to finer meshes 
+	    if (clm_prec_roots == 1) then !new root fraction expression 
+
+		    clm(t)%rootfr(1) = exp(-(tile(t)%rootb+1)/tile(t)%rootb * tile(t)%roota**tile(t)%rootb * &
+		           (clm(t)%zi(1)**(-tile(t)%rootb) - clm(t)%zi(nlevsoi)**(-tile(t)%rootb)))
+		    do bj = 2, nlevsoi
+		      clm(t)%rootfr(bj) = exp(-(tile(t)%rootb+1)/tile(t)%rootb * tile(t)%roota**tile(t)%rootb * &
+		           (clm(t)%zi(bj)**(-tile(t)%rootb) - clm(t)%zi(nlevsoi)**(-tile(t)%rootb))) &
+		           - exp(-(tile(t)%rootb+1)/tile(t)%rootb * tile(t)%roota**tile(t)%rootb * &
+		           (clm(t)%zi(bj-1)**(-tile(t)%rootb) - clm(t)%zi(nlevsoi)**(-tile(t)%rootb)))
+		    enddo      
+
+	    else ! Origin root fraction expression              
+		   do bj = 1, nlevsoi-1
+		   clm(t)%rootfr(bj) = .5*( exp(-tile(t)%roota*clm(t)%zi(bj-1))  &
+		                   + exp(-tile(t)%rootb*clm(t)%zi(bj-1))  &
+		                   - exp(-tile(t)%roota*clm(t)%zi(bj  ))  &
+		                   - exp(-tile(t)%rootb*clm(t)%zi(bj  )) )
+		   enddo
+		   clm(t)%rootfr(nlevsoi)=.5*( exp(-tile(t)%roota*clm(t)%zi(nlevsoi-1))&
+		                       + exp(-tile(t)%rootb*clm(t)%zi(nlevsoi-1)))
+	   endif
+!! LRH end of modification
+
            ! account for vertical root fraction distribution for trees !BH
            if (tile(t)%vegt == 7) then
               maxd=3
@@ -563,11 +591,11 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
   !    (values no longer read by drv_getforce, passed from PF)
   !    (drv_getforce is modified to convert arrays from PF input to CLM space)
   !call drv_getforce(drv,tile,clm,nx,ny,sw_pf,lw_pf,prcp_pf,tas_pf,u_pf,v_pf,patm_pf,qatm_pf,istep_pf)
-  !BH: modification of drv_getforc to optionnaly force vegetation (LAI/SAI/Z0M/DISPLA): 
   !BH: this replaces values from clm_dynvegpar called previously from drv_clmini and 
   !BH: replaces values from drv_readvegpf
+  !MC (LRH): force tcrit by clm_critic_temp
   call drv_getforce(drv,tile,clm,nx,ny,sw_pf,lw_pf,prcp_pf,tas_pf,u_pf,v_pf, &
-  patm_pf,qatm_pf,lai_pf,sai_pf,z0m_pf,displa_pf,istep_pf,clm_forc_veg)
+  patm_pf,qatm_pf,lai_pf,sai_pf,z0m_pf,displa_pf,istep_pf,clm_forc_veg, clm_critic_temp)
 
   !=== Actual time loop
   !    (loop over CLM tile space, call 1D CLM at each point)
@@ -575,7 +603,7 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
      clm(t)%qflx_infl_old       = clm(t)%qflx_infl
      clm(t)%qflx_tran_veg_old   = clm(t)%qflx_tran_veg
      if (clm(t)%planar_mask == 1) then
-        call clm_main (clm(t),drv%day,drv%gmt) 
+        call clm_main (clm(t),drv%day,drv%gmt, clm_snow_frac) 
      else
      endif ! Planar mask
   enddo ! End of the space vector loop
@@ -622,6 +650,14 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
         qflx_tveg_pf(l)    = clm(t)%qflx_tran_veg
         qflx_in_pf(l)      = clm(t)%qflx_infl 
         swe_pf(l)          = clm(t)%h2osno 
+        !@LRH (JMC) add outputs
+        snd_pf(l)          = clm(t)%snowdp
+        snoalb_pf(l)       = clm(t)%snoalb
+        surfalb_pf(l)      = clm(t)%surfalb
+        snowage_pf(l)       = clm(t)%snowage
+        ndvi_pf(l)         = clm(t)%ndvi
+        qflx_snomelt_pf(l) = clm(t)%qflx_snomelt
+        !@LRH (JMC) end add outputs
         t_g_pf(l)          = clm(t)%t_grnd
         qirr_pf(l)         = clm(t)%qflx_qirr
         irr_flag_pf(l)     = clm(t)%irr_flag
@@ -637,6 +673,14 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
         qflx_tveg_pf(l)    = -9999.0
         qflx_in_pf(l)      = -9999.0
         swe_pf(l)          = -9999.0
+        !@JMC add outputs
+        snd_pf(l)          = -9999.0
+        snoalb_pf(l)       = -9999.0
+        surfalb_pf(l)      = -9999.0
+        snowage_pf(l)       = -9999.0
+        ndvi_pf(l)         = -9999.0
+        qflx_snomelt_pf(l) = -9999.0
+        !@JMC end add ouputs
         t_g_pf(l)          = -9999.0
         qirr_pf(l)         = -9999.0
         irr_flag_pf(l)     = -9999.0
@@ -735,7 +779,7 @@ clm_last_rst,clm_daily_rst, pf_nlevsoi, pf_nlevlak)
 
   !=== Write spatially-averaged BC's and IC's to file for user
   if (clm_write_logs==1) then ! NBE
-  if (istep_pf==1) call drv_pout(drv,tile,clm,rank)
+  if (istep_pf==1) call drv_pout(drv,tile,clm,rank, clm_critic_temp)
   endif
 
   !=== If at end of simulation, close all files

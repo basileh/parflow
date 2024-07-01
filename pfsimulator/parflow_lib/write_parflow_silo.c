@@ -61,6 +61,7 @@ void       WriteSilo_Subvector(DBfile *db_file, Subvector *subvector, Subgrid   
 
   int i, j, k, ai;
   double         *data;
+  double mult, z_coord;            //@RMM dz scale info LRH sans certitude
 
   int err;
 
@@ -204,6 +205,8 @@ void     WriteSiloInit(char *file_prefix)
   int P = amps_Size(amps_CommWorld);
   int i;
   int j;
+  
+  int err; //LRH sans certitude
 
   char key[IDB_MAX_KEY_LEN];
 
@@ -278,6 +281,12 @@ void     WriteSiloInit(char *file_prefix)
                              "qflx_tran_veg",
                              "qflx_infl",
                              "swe_out",
+							 "snd_out", 
+							 "snoalb_out",
+							 "surfalb_out",
+							 "snowage_out",
+							 "ndvi_out",
+							 "qflx_snomelt_out",
                              "t_grnd",
                              "t_soil",
                              "qflx_qirr",
@@ -288,6 +297,7 @@ void     WriteSiloInit(char *file_prefix)
                              "overland_bc_flux", };
 
     // IMF -- added second '+2' to next line...
+    /* @LRH (JMC) added several snow variables : snd_out, snoalb, ...qflx_snomelt_out */
     for (i = 0; i < 31 + 2; i++)
     {
       sprintf(filename, "%s/%s", file_prefix, output_types[i]);

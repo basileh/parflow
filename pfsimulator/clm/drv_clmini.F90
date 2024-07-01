@@ -1,6 +1,6 @@
 !#include <misc.h>
 
-subroutine drv_clmini (drv, grid, tile, clm, istep_pf)
+subroutine drv_clmini (drv, grid, tile, clm, istep_pf, clm_prec_roots, clm_snow_frac) !MC(LRH) added clm_prec_roots and clm_snow_frac
 
 !=========================================================================
 !
@@ -66,10 +66,12 @@ subroutine drv_clmini (drv, grid, tile, clm, istep_pf)
   type (tiledec) :: tile
   type (clm1d)   :: clm  
   integer        :: istep_pf
+  integer        :: clm_prec_roots ! LRH: whether root distrib with no root just below the surf is being chosen 0=no, 1=yes
+  integer        :: clm_snow_frac  ! MC (LRH): whether snow partition/fraction is deactivated 0=snow
 
 !=== Local Variables =====================================================
 
-  integer  i, j, L           !loop indices
+  integer  i, j, L, bj       !loop indices LRH added bj
   real(r8) bd                !bulk density of dry soil material [kg/m^3]
   real(r8) tkm               !mineral conductivity
   real(r8) zlak(1:10)   !temporary z; currenly hard coded initialization
@@ -180,15 +182,30 @@ subroutine drv_clmini (drv, grid, tile, clm, istep_pf)
 ! given in Zeng et al. (1998).
 ! ========================================================================
 
-  do j = 1, nlevsoi-1
-     clm%rootfr(j) = .5*( exp(-tile%roota*clm%zi(j-1))  &
-                        + exp(-tile%rootb*clm%zi(j-1))  &
-                        - exp(-tile%roota*clm%zi(j  ))  &
-                        - exp(-tile%rootb*clm%zi(j  )) )
-  enddo
-  clm%rootfr(nlevsoi)=.5*( exp(-tile%roota*clm%zi(nlevsoi-1))&
-                         + exp(-tile%rootb*clm%zi(nlevsoi-1)))
-  
+!! LRH modifies to allow an other root distribution, with no roots just below the surface, adapted to finer meshes 
+  if (clm_prec_roots == 1) then !new root fraction expression 
+
+      clm%rootfr(1) = exp(-(tile%rootb+1)/tile%rootb * tile%roota**tile%rootb * &
+                 (clm%zi(1)**(-tile%rootb) - clm%zi(nlevsoi)**(-tile%rootb)))
+      do bj = 2, nlevsoi
+          clm%rootfr(bj) = exp(-(tile%rootb+1)/tile%rootb * tile%roota**tile%rootb * &
+                     (clm%zi(bj)**(-tile%rootb) - clm%zi(nlevsoi)**(-tile%rootb))) &
+                     - exp(-(tile%rootb+1)/tile%rootb * tile%roota**tile%rootb * &
+                     (clm%zi(bj-1)**(-tile%rootb) - clm%zi(nlevsoi)**(-tile%rootb)))
+    enddo      
+
+  else ! Origin root fraction expression              
+     do bj = 1, nlevsoi-1
+         clm%rootfr(bj) = .5*( exp(-tile%roota*clm%zi(bj-1))  &
+                     + exp(-tile%rootb*clm%zi(bj-1))  &
+                     - exp(-tile%roota*clm%zi(bj  ))  &
+                     - exp(-tile%rootb*clm%zi(bj  )) )
+     enddo
+     clm%rootfr(nlevsoi)=.5*( exp(-tile%roota*clm%zi(nlevsoi-1))&
+                       + exp(-tile%rootb*clm%zi(nlevsoi-1)))
+  endif
+!! LRH end of modification
+
   ! reset depth variables assigned by user in clmin file 
   do l=1,nlevsoi
      if (grid(tile%col,tile%row)%rootfr /= drv%udef) &
@@ -441,7 +458,7 @@ subroutine drv_clmini (drv, grid, tile, clm, istep_pf)
 ! fraction
 ! ========================================================================
 
-  call clm_dynvegpar (clm)
+  call clm_dynvegpar (clm, clm_snow_frac) ! MC (LRH) added clm_snow_frac
 
 ! ========================================================================
 ! TIME VARIANT [7]

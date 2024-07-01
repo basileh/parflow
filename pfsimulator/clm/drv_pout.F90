@@ -1,6 +1,6 @@
 !#include <misc.h>
 
-subroutine drv_pout (drv, tile, clm,rank)
+subroutine drv_pout (drv, tile, clm,rank, clm_critic_temp)
 
 !=========================================================================
 !
@@ -26,7 +26,7 @@ subroutine drv_pout (drv, tile, clm,rank)
   use drv_tilemodule      ! Tile-space variables
   use clmtype             ! 1-D CLM variables
   use clm_varpar, only : nlevsoi, nlevsno
-  use clm_varcon, only : tcrit
+  ! use clm_varcon, only : tcrit MC (LRH) modified to force critical temperature for snow/rain partition
   implicit none
 
 !=== Arguments ===========================================================
@@ -34,6 +34,7 @@ subroutine drv_pout (drv, tile, clm,rank)
   type (drvdec)  :: drv              
   type (tiledec) :: tile(drv%nch)
   type (clm1d)   :: clm (drv%nch)
+  real(r8) :: clm_critic_temp ! MC (LRH) modified to force critical temperature for snow/rain partition (used to be tcrit from varcon)
 
 !=== Local Variables =====================================================
 
@@ -95,7 +96,8 @@ subroutine drv_pout (drv, tile, clm,rank)
   write(n,*)
   write(n,3)'Number of Soil Layers      ',nlevsoi
   write(n,3)'Max number of snow layers  ',nlevsno
-  write(n,2)'Critical Rain/Snow Temp:   ',tcrit
+  ! write(n,2)'Critical Rain/Snow Temp:   ',tcrit
+  write(n,2)'Critical Rain/Snow Temp:   ',clm_critic_temp ! MC (LRH) forcing tcrit
   write(n,*)
 
 ! Write out 2-D parameters

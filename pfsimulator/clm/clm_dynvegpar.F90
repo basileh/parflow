@@ -1,6 +1,6 @@
 !#include <misc.h>
 
-subroutine clm_dynvegpar (clm)
+subroutine clm_dynvegpar (clm, clm_snow_frac)
 
 !=========================================================================
 !
@@ -31,6 +31,7 @@ subroutine clm_dynvegpar (clm)
 !=== Arguments ===========================================================
 
   type (clm1d)   :: clm 
+  integer, intent(in)  :: clm_snow_frac         !MC (LRH) option to (de)activate snow fractionation on a pixel
 
 !=== Local Variables =====================================================
 
@@ -38,10 +39,8 @@ subroutine clm_dynvegpar (clm)
   real(r8) fb      !fraction of canopy layer covered by snow
 
 !=== End Variable List ===================================================
-
 ! Note: temporarily set, they can be given by measurement, or dynamic ecosystem model
 ! only nonzero if NOT glacier/ice, water or bare soil
-
   if ((.not. clm%lakpoi) .AND. (.not. clm%baresoil) .AND. (clm%itypwat/=istice)) then  
      !seasb     = max(dble(0.), dble(1.) - dble(0.0016)*max(298.-clm%t_soisno(7),dble(0.0))**2)
      seasb     = max(dble(0.), dble(1.) - dble(0.0016)*max(298.-clm%t_soisno(clm%soi_z),dble(0.0))**2) ! NBE: Added variable to set layer #
@@ -78,6 +77,14 @@ subroutine clm_dynvegpar (clm)
   
 ! Fraction of soil covered by snow
 
-  clm%frac_sno = clm%snowdp/(10.*clm%zlnd + clm%snowdp)  
+  if (clm_snow_frac==1) then
+     clm%frac_sno = clm%snowdp/(10.*clm%zlnd + clm%snowdp)  
+  else
+     if (clm%snowdp>0) then
+        clm%frac_sno = 1
+     else 
+        clm%frac_sno = 0
+     endif
+  endif
 
 end subroutine clm_dynvegpar

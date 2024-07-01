@@ -1,7 +1,7 @@
 !#include <misc.h>
 
 subroutine drv_getforce (drv,tile,clm,nx,ny,sw_pf,lw_pf,prcp_pf,tas_pf,u_pf,v_pf, &
-  patm_pf,qatm_pf,lai_pf,sai_pf,z0m_pf,displa_pf,istep_pf,clm_forc_veg)
+  patm_pf,qatm_pf,lai_pf,sai_pf,z0m_pf,displa_pf,istep_pf,clm_forc_veg,clm_critic_temp)
 
 !=========================================================================
 !
@@ -33,7 +33,7 @@ subroutine drv_getforce (drv,tile,clm,nx,ny,sw_pf,lw_pf,prcp_pf,tas_pf,u_pf,v_pf
   use drv_module          ! 1-D Land Model Driver variables
   use drv_tilemodule      ! Tile-space variables
   use clmtype             ! 1-D CLM variables
-  use clm_varcon, only : tfrz, tcrit
+  use clm_varcon, only : tfrz ! used to have tcrit too, MC (LRH) modified to force critical temperature for snow/rain partition by clm_critic_temp
   implicit none
 
 !=== Arguments ===========================================================
@@ -43,6 +43,7 @@ subroutine drv_getforce (drv,tile,clm,nx,ny,sw_pf,lw_pf,prcp_pf,tas_pf,u_pf,v_pf
   type (clm1d)  ,intent(inout) :: clm (drv%nch)
   integer,intent(in)  :: istep_pf,nx,ny
   integer,intent(in)  :: clm_forc_veg                       ! BH: whether vegetation (LAI, SAI, z0m, displa) is being forced 0=no, 1=yes
+  real(r8),intent(in):: clm_critic_temp			    ! MC (LRH) : forcing critical temperature for snow/rain partition (used to be tcrit from varcon)
   real(r8),intent(in) :: sw_pf((nx+2)*(ny+2)*3)             ! SW rad, passed from PF
   real(r8),intent(in) :: lw_pf((nx+2)*(ny+2)*3)             ! LW rad, passed from PF
   real(r8),intent(in) :: prcp_pf((nx+2)*(ny+2)*3)           ! Precip, passed from PF
@@ -118,8 +119,9 @@ subroutine drv_getforce (drv,tile,clm,nx,ny,sw_pf,lw_pf,prcp_pf,tas_pf,u_pf,v_pf
      !(Set upper limit of air temperature for snowfall at 275.65K.
      ! This cut-off was selected based on Fig. 1, Plate 3-1, of Snow
      ! Hydrology (1956)).
+     ! if(clm(t)%forc_t > (tfrz + tcrit))then
      if (prcp > 0.) then
-        if(clm(t)%forc_t > (tfrz + tcrit))then
+        if(clm(t)%forc_t > (tfrz + clm_critic_temp))then
            clm(t)%itypprc   = 1
            clm(t)%forc_rain = prcp
            clm(t)%forc_snow = 0.
