@@ -26,6 +26,6 @@ module clm_varpar
   integer, parameter :: nlevsno     =  5    !number of maximum snow levels
 
   integer, parameter :: numrad      =   2   !number of solar radiation bands: vis, nir
-  integer, parameter :: numcol      =   8   !number of soil color types
+  integer, parameter :: numcol      =   11   !number of soil color types LRH modif, 9=jachère, 10=Mil, 11=test
 
 end module clm_varpar

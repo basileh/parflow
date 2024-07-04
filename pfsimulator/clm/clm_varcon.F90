@@ -76,18 +76,28 @@ module clm_varcon
 ! saturated soil albedos for 8 color classes: 1=vis, 2=nir
 ! LRH (MT) modifie en remplaçant premières valeurs des deux lignes 
   real(r8) :: albsat(numcol,numrad) !wet soil albedo by color class and waveband
-  !  data(albsat(i,1),i=1,8)/0.12,0.11,0.10,0.09,0.08,0.07,0.06,0.05/
-  !  data(albsat(i,2),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/
-  data(albsat(i,1),i=1,8)/0.126,0.135,0.10,0.09,0.08,0.07,0.06,0.05/
-  data(albsat(i,2),i=1,8)/0.252,0.27,0.20,0.18,0.16,0.14,0.12,0.10/
+  ! data(albsat(i,1),i=1,8)/0.12,0.11,0.10,0.09,0.08,0.07,0.06,0.05/ ! origin
+  ! data(albsat(i,2),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/ ! origin
+  ! data(albsat(i,1),i=1,8)/0.126,0.135,0.10,0.09,0.08,0.07,0.06,0.05/ ! modif MT
+  ! data(albsat(i,2),i=1,8)/0.252,0.27,0.20,0.18,0.16,0.14,0.12,0.10/ ! modif MT
+  ! LRH (MT) end of modification
+  ! LRH modifies number of colors 8 -> 11 9 for Jachère , 10 for Millet, 11 for tests (set to color1 datas)
+  data(albsat(i,1),i=1,numcol)/0.12,0.11,0.10,0.09,0.08,0.07,0.06,0.05,0.126,0.135,0.12/ ! modif LRH
+  data(albsat(i,2),i=1,numcol)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10,0.252,0.27,0.24/ ! modif LRH
+! LRH end of modif
 
 ! dry soil albedos for 8 color classes: 1=vis, 2=nir 
 ! LRH (MT) modifie en remplaçant premières valeurs des deux lignes 
   real(r8) :: albdry(numcol,numrad) !dry soil albedo by color class and waveband
-  data(albdry(i,1),i=1,8)/0.345,0.326,0.20,0.18,0.16,0.14,0.12,0.10/
-  data(albdry(i,2),i=1,8)/0.69,0.652,0.40,0.36,0.32,0.28,0.24,0.20/
-!  data(albdry(i,1),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/
-!  data(albdry(i,2),i=1,8)/0.48,0.44,0.40,0.36,0.32,0.28,0.24,0.20/
+!  data(albdry(i,1),i=1,8)/0.345,0.326,0.20,0.18,0.16,0.14,0.12,0.10/ ! modif MT
+!  data(albdry(i,2),i=1,8)/0.69,0.652,0.40,0.36,0.32,0.28,0.24,0.20/ ! modif MT
+!  data(albdry(i,1),i=1,8)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10/ ! origin
+!  data(albdry(i,2),i=1,8)/0.48,0.44,0.40,0.36,0.32,0.28,0.24,0.20/ ! origin
+! LRH (MT) end of modification
+! LRH modifies number of colors 8 -> 11 one for Jachère , one for Millet, one for tests (set to color1 datas)
+  data(albdry(i,1),i=1,numcol)/0.24,0.22,0.20,0.18,0.16,0.14,0.12,0.10,0.345,0.326,0.24/ ! modif LRH
+  data(albdry(i,2),i=1,numcol)/0.48,0.44,0.40,0.36,0.32,0.28,0.24,0.20,0.69,0.652,0.48/ ! modif LRH
+! LRH end of modif
 
 ! albedo land ice: 1=vis, 2=nir
 
