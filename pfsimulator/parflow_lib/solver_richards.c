@@ -396,7 +396,6 @@ SetupRichards(PFModule * this_module)
 
 #ifdef HAVE_CLM
   /* IMF: for CLM met forcings (local to SetupRichards) */
-  char filename[128];
   int n, nc, c;                 /*Added c BH */
   int ch;
   double sw, lw, prcp, tas, u, v, patm, qatm, lai, sai, z0m, displa;    // forcing vars added vegetation BH
@@ -1758,7 +1757,6 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   double *z0m_data = NULL; /*BH*/ 
   double *displa_data = NULL; /*BH*/ 
   double *veg_map_data = NULL;/*BH*/			/*will fail if veg_map_data is declared as int */
-  char filename[2048];          // IMF: 1D input file name *or* 2D/3D input file base name
   Subvector *sw_forc_sub, *lw_forc_sub, *prcp_forc_sub, *tas_forc_sub, *u_forc_sub, *v_forc_sub, *patm_forc_sub, *qatm_forc_sub, *lai_forc_sub, *sai_forc_sub, *z0m_forc_sub, *displa_forc_sub, *veg_map_forc_sub;      /*BH: added LAI/SAI/Z0M/DISPLA/vegmap */
 
   /* Slopes */
@@ -1782,7 +1780,6 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   int rank = amps_Rank(amps_CommWorld);
 #endif
 
-  int rank;
   int any_file_dumped;
   int clm_file_dumped;
   int dump_files = 0;
@@ -3928,6 +3925,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       {
         if (public_xtra->single_clm_file)       //NBE
         {
+          int nz; /*BH: declaration of number of z layers for extracting surface pressure */
           // NBE: CLM single file output
           PFVLayerCopy(0, 0, instance_xtra->clm_out_grid,
                        instance_xtra->eflx_lh_tot);
