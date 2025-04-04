@@ -1,6 +1,7 @@
 # ParFlow
 
-![ParFlow CI Test](https://github.com/parflow/parflow/workflows/ParFlow%20CI%20Test/badge.svg)
+![ParFlow Linux CI Test](https://github.com/parflow/parflow/actions/workflows/linux.yml/badge.svg)
+![ParFlow MacOS CI Test](https://github.com/parflow/parflow/actions/workflows/macos.yml/badge.svg)
 
 ParFlow is an open-source, modular, parallel watershed flow model. It
 includes fully-integrated overland flow, the ability to simulate
@@ -18,10 +19,13 @@ ParFlow v3.5.0: capabilities, applications, and ongoing development of
 an open-source, massively parallel, integrated hydrologic
 model](https://www.geosci-model-dev.net/13/1373/2020/gmd-13-1373-2020.pdf).
 
-The Parflow User Manual is available at [Parflow Users
-Manual](https://github.com/parflow/parflow/blob/master/parflow-manual.pdf).
-The manual contains additional documentation on how to use ParFlow and
-setup input files.  A quick start is included below.
+An online version of the users manual is available on [Read the
+Docks:Parflow Users
+Manual](https://parflow.readthedocs.io/en/latest/index.html).  The
+manual contains additional documentation on how to use ParFlow and
+setup input files.  A quick start is included below.  A PDF version is
+available at [Parflow Users
+Manual PDF](https://parflow.readthedocs.io/_/downloads/en/latest/pdf/).
 
 ### Citing Parflow
 
@@ -242,32 +246,57 @@ or by starting a parallel interactive session.
 
 ### User Manual
 
-A version of the user manual is available at github : [Parflow Users Manual](https://github.com/parflow/parflow/blob/master/parflow-manual.pdf)
+An online version of the user manual is also available on [Read the
+Docks:Parflow Users
+Manual](https://parflow.readthedocs.io/en/latest/index.html), a PDF
+version is available at [Parflow Users
+Manual PDF](https://parflow.readthedocs.io/_/downloads/en/latest/pdf/).
 
-The user manual for Parflow may be built as part of the build when
-Latex is available on the system. Adding the
--DPARFLOW_ENABLE_LATEX=TRUE option to the CMake configure will enable
-building of the documentation.
+#### Generating the user manual in HTML
+
+An HTML version of the user manual for Parflow may be built using:
 
 ```shell
-   mkdir build
-   cd build
-   cmake ../parflow \
-        <other cmake options> \
-	-DPARFLOW_ENABLE_LATEX=TRUE \
-	-DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
+cd docs/user_manual
+pfpython -m pip install -r requirements.txt
+
+make html
 ```
 
-When make is run the documenation will be built and installed in
-${INSTALL_DIR}/docs/user_manual.pdf.
+The main HTML page created at _build/html/index.html.   Open this using 
+a browser.  On MacOS:
+
+```shell
+open _build/html/index.html
+```
+
+or a browser if on Linux:
+
+```shell
+firefox _build/html/index.html
+```
+
+#### Generating the user manual in PDF
+
+An HTML version of the user manual for Parflow may be built using:
+
+```shell
+cd docs/user_manual
+pfpython -m pip install -r requirements.txt
+
+make latexpdf
+```
+
+This command is currently failing for a number of users, possibly due
+to old LaTex installs.  We are currently investigating.
 
 ### Code documentation
 
-Parflow is moving to using Doxygen for code documenation.  The documentation is currently very sparse.
+Parflow is moving to using Doxygen for code documentation.  The documentation is currently very sparse.
 
 Adding the -DPARFLOW_ENABLE_DOXYGEN=TRUE option to the CMake configure
 will enable building of the code documentation.  After CMake has been
-run the Doxygen code documenation is built with:
+run the Doxygen code documentation is built with:
 
 ```shell
    cd build
@@ -287,11 +316,14 @@ HTML pages are generated in the build/docs/doxygen/html directory.
       -D PARFLOW_ENABLE_SIMULATOR=OFF \
       -D PARFLOW_ENABLE_KEYS_DOC=ON \
       -D PARFLOW_ENABLE_PYTHON=ON \
-      -D PARFLOW_PYTHON_VIRTUAL_ENV=ON
 
     cd ./build-docker && make ParFlowKeyDoc
+```
 
-    open ./build-docker/docs/pf-keys/build-site/index.html
+On MacOS the key documentation may be viewed with `open` or use a browser to open the index.html file:
+
+```
+    open ./build-docker/docs/user_manual/build-site/index.html
 ```	
 
 ## Configure options
@@ -334,7 +366,7 @@ submission system used.  By default CMake will attempt to determine an
 appropriate tool; a process that does not always yield the correct result.
 
 There are several ways to modify the CMake guess on how applications
-should be run.  At configure time you may overwride the MPI launcher
+should be run.  At configure time you may override the MPI launcher
 using:
 
 ```shell 
@@ -355,7 +387,7 @@ performance:
    export PARFLOW_MPIEXEC_EXTRA_FLAGS="--mca mpi_yield_when_idle 1 --oversubscribe"
 ```
 
-Last the TCL script can explicity set the command to invoke for
+Last the TCL script can explicitly set the command to invoke for
 running ParFlow.  This is done by setting the Process.Command key in
 the input database.  For example to use the mpiexec command and
 control the cpu set used the following command string can be used:
@@ -377,7 +409,7 @@ modified to use the custom command string:
 ```
 ## Building simulator and tools support separately
 
-This section is for advanced users runing on heterogenous HPC architectures.
+This section is for advanced users running on heterogeneous HPC architectures.
 
 ParFlow is composed of two main components that maybe configured and
 built separately.  Some HPC platforms are heterogeneous with the login
@@ -429,7 +461,7 @@ you will need to modify the 'Dockerfile' file.
 .\bin\docker-build.bat
 ```
 
-## Building the Docker image with CMake (expirmental)
+## Building the Docker image with CMake (expirmental not supported)
 
 Rather than building ParFlow on your computer, you can use the build
 system to create a container and build ParFlow in it.

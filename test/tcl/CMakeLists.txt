@@ -12,10 +12,14 @@ set(TESTS
   crater2D_vangtable_linear.tcl
   small_domain.tcl
   richards_hydrostatic_equalibrium.tcl
+  LW_surface_press.tcl
 )
 
 if(${PARFLOW_HAVE_HYPRE})
   list(APPEND TESTS
+    Dirichlet.tcl
+    bc_pressure_file.tcl
+    bc_flux_file.tcl
     default_richards.tcl
     default_richards_nocluster.tcl
     default_overland.tcl
@@ -59,8 +63,9 @@ if(${PARFLOW_HAVE_NETCDF})
   if(${PARFLOW_HAVE_HYPRE})
     #This test is failing on several platforms
     list(APPEND TESTS
-    	default_richards_with_netcdf.tcl
-    	default_richards_with_netcdf_compressed.tcl)
+      default_richards_with_netcdf.tcl
+      default_richards_with_netcdf_compressed.tcl
+      default_richards_restart_netcdf.tcl)
   endif()
 endif()
 
@@ -97,6 +102,14 @@ if ( ${PARFLOW_AMPS_LAYER} IN_LIST PARFLOW_AMPS_LAYER_REQUIRE_MPI )
       richards_box_proctest.vardz.tcl)
   endif()
 
+endif()
+
+if(${PARFLOW_HAVE_OAS3})
+  # Exclude tests that use Richards solver
+  set(TESTS "")
+  set(PARALLEL_3DTOPO_TESTS "")
+  set(PARALLEL_2DTOPO_TESTS "")
+  list(APPEND TESTS default_single.tcl)
 endif()
 
 foreach(inputfile ${TESTS})

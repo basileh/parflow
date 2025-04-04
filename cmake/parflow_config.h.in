@@ -59,8 +59,8 @@
 #cmakedefine PARFLOW_HAVE_MALLOC_H
 #cmakedefine HAVE_MALLOC_H
 
+#cmakedefine PARFLOW_HAVE_MALLINFO2
 #cmakedefine PARFLOW_HAVE_MALLINFO
-#cmakedefine HAVE_MALLINFO
 
 #cmakedefine PARFLOW_HAVE_ETRACE
 
@@ -74,5 +74,7 @@
    the amps tests would fail if used across all compiles.              */
 
 #cmakedefine PARFLOW_HAVE_OMP
+
+#cmakedefine PARFLOW_HAVE_UMPIRE
 
 #endif // PARFLOW_CONFIG_H

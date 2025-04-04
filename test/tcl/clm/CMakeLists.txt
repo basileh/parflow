@@ -1,6 +1,3 @@
-
-# add_test (NAME clm COMMAND tclsh clm.tcl 1 1 1 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
 set(TESTS "")
 if(${PARFLOW_HAVE_CLM})
   if(${PARFLOW_HAVE_HYPRE})
@@ -8,11 +5,12 @@ if(${PARFLOW_HAVE_CLM})
       clm.tcl
       clm_forc_veg.tcl
       clm_varDZ.tcl
-      clm_slope.tcl)
+      clm_slope.tcl
+      clm_rz_water_stress.tcl)
   endif()
 endif()
 
-set(APPEND PARALLEL_TESTS)
+set(PARALLEL_TESTS)
 
 if((${PARFLOW_AMPS_LAYER} STREQUAL "mpi1") OR (${PARFLOW_AMPS_LAYER} STREQUAL "cuda"))
   if(${PARFLOW_HAVE_HYPRE})
@@ -53,5 +51,6 @@ foreach(inputfile ${SAMRAI_TESTS})
 endforeach()
 
 add_subdirectory (clm-reuse)
+add_subdirectory (pfclm_sc)
 
 

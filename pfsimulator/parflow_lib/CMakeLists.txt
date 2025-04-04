@@ -11,6 +11,7 @@ set (SRC_FILES_CONST advect.F
   computation.c
   compute_maximums.c
   compute_top.c
+  compute_patch_top.c
   compute_total_concentration.c
   constantRF.c
   constant_porosity.c
@@ -57,7 +58,6 @@ set (SRC_FILES_CONST advect.F
   pf_smg.c
   pfield.c
   pgsRF.c
-  phase_velocity_face.c
   ppcg.c
   printgrid.c
   printmatrix.c
@@ -89,6 +89,8 @@ set (SRC_FILES_CONST advect.F
   problem_thermal_conductivity.c
   problem_toposlope_x.c
   problem_toposlope_y.c
+  problem_wc_x.c
+  problem_wc_y.c
   process_grid.c
   random.c
   ratqr.c
@@ -115,7 +117,10 @@ set (SRC_FILES_CONST advect.F
   well.c
   well_package.c
   wells_lb.c
+  reservoir.c
+  reservoir_package.c
   wrf_parflow.c
+  cpl_parflow.c
   write_clm_netcdf.c
   write_parflow_binary.c
   write_parflow_netcdf.c
@@ -142,6 +147,7 @@ if( (${PARFLOW_HAVE_CUDA}) OR (${PARFLOW_HAVE_KOKKOS}) OR (${PARFLOW_HAVE_OMP}) 
     overlandflow_eval.cpp
     overlandflow_eval_diffusive.cpp
     overlandflow_eval_Kin.cpp
+    phase_velocity_face.cpp
     problem_phase_density.cpp
     problem_phase_rel_perm.cpp
     problem_phase_source.cpp
@@ -198,7 +204,6 @@ endif(${PARFLOW_HAVE_KOKKOS})
 
   if ( ${PARFLOW_HAVE_CUDA} )
     target_link_libraries(pfsimulator nvToolsExt)
-    target_include_directories(pfsimulator PUBLIC "../third_party/cub")
     target_include_directories(pfsimulator PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
   endif ( ${PARFLOW_HAVE_CUDA} )
 
@@ -212,6 +217,10 @@ endif(${PARFLOW_HAVE_KOKKOS})
     target_include_directories(pfsimulator PRIVATE ${RMM_INCLUDE})
     target_compile_definitions(pfsimulator PRIVATE PARFLOW_HAVE_RMM)
   endif( ${PARFLOW_HAVE_RMM} )
+
+  if( ${PARFLOW_HAVE_UMPIRE} )
+    target_link_libraries(pfsimulator umpire)
+  endif( ${PARFLOW_HAVE_UMPIRE} )  
 
 else( (${PARFLOW_HAVE_CUDA}) OR (${PARFLOW_HAVE_KOKKOS}) OR (${PARFLOW_HAVE_OMP}) )
 
@@ -233,6 +242,7 @@ else( (${PARFLOW_HAVE_CUDA}) OR (${PARFLOW_HAVE_KOKKOS}) OR (${PARFLOW_HAVE_OMP}
     overlandflow_eval.c
     overlandflow_eval_diffusive.c
     overlandflow_eval_Kin.c
+    phase_velocity_face.c
     pf_module.c
     problem_bc.c
     problem_bc_pressure.c
@@ -251,6 +261,11 @@ else( (${PARFLOW_HAVE_CUDA}) OR (${PARFLOW_HAVE_KOKKOS}) OR (${PARFLOW_HAVE_OMP}
 
 endif( (${PARFLOW_HAVE_CUDA}) OR (${PARFLOW_HAVE_KOKKOS}) OR (${PARFLOW_HAVE_OMP}) )
 
+if( ${PARFLOW_BUILD_WITH_CPP} )
+  set_source_files_properties(${SRC_FILES_ARCH} ${SRC_FILES_CONST}
+    PROPERTIES LANGUAGE CXX)
+endif()
+
 target_link_libraries(pfsimulator pfkinsol amps cjson ${PARFLOW_ETRACE_LIBRARY})
 target_include_directories(pfsimulator PUBLIC "../third_party/cjson")
 
@@ -260,23 +275,35 @@ endif (${PARFLOW_HAVE_MPI})
 
 install (TARGETS pfsimulator DESTINATION lib)
 
+if(${PARFLOW_HAVE_CLM})
+  target_link_libraries (pfsimulator pfclm)
+endif(${PARFLOW_HAVE_CLM})
+
 if (${PARFLOW_HAVE_HYPRE})
   target_include_directories (pfsimulator PUBLIC ${HYPRE_INCLUDE_DIR})
+  target_link_libraries (pfsimulator ${HYPRE_LIBRARIES})
 endif (${PARFLOW_HAVE_HYPRE})
 
 if (${PARFLOW_HAVE_MPI})
   target_include_directories (pfsimulator PUBLIC "${MPI_C_INCLUDE_PATH}")
+  target_link_libraries (pfsimulator ${MPI_LIBRARIES})
 endif (${PARFLOW_HAVE_MPI})
 
 if (${PARFLOW_HAVE_HDF5})
   target_include_directories (pfsimulator PUBLIC "${HDF5_INCLUDE_DIRS}")
+  target_link_libraries (pfsimulator ${HDF5_LIBRARIES})
+  if (${PARFLOW_HAVE_NETCDF})
+    target_link_libraries (pfsimulator ${HDF5_HL_LIBRARIES})
+  endif (${PARFLOW_HAVE_NETCDF})
 endif (${PARFLOW_HAVE_HDF5})
 
 if (${PARFLOW_HAVE_SILO})
   target_include_directories (pfsimulator PUBLIC "${SILO_INCLUDE_DIRS}")
+  target_link_libraries (pfsimulator ${SILO_LIBRARIES})
 endif (${PARFLOW_HAVE_SILO})
 
 if (${PARFLOW_HAVE_NETCDF})
   target_include_directories (pfsimulator PUBLIC "${netCDF_INCLUDE_DIRS}")
   target_include_directories (pfsimulator PUBLIC "${NETCDF_INCLUDE_DIRS}")
+  target_link_libraries (pfsimulator ${NETCDF_LIBRARIES})
 endif (${PARFLOW_HAVE_NETCDF})
