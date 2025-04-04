@@ -1,0 +1,49 @@
+# ParFlow C Configuration Summary
+=================================
+
+# General
+---------
+ParFlow Version:	v3.3.1-IGE-329-g414107a2
+Hostname:		ige-mcpn-p113
+OS:			Linux-6.8.0-52-generic
+Build Directory: 	/home/hectorb/PARFLOW/SOURCES/PF_2022_07/build
+Install Prefix:         /home/hectorb/PARFLOW/SOURCES/PF_2022_07/parflow
+
+# Compiling Options
+-------------------
+
+Build Type:		
+
+C Compiler:		/usr/bin/cc
+CXX Compiler:		/usr/bin/c++
+Fortran Compiler:	/usr/bin/gfortran
+
+C Flags:		
+CXX Flags:		
+Fortran Flags: 		 -fimplicit-none
+
+# Features Enabled
+------------------
+AMPS Comm Layer:	mpi1
+AMPS Sequential IO:	true
+SLURM Support:		
+
+CLM Support:		yes
+Hypre Support:		yes
+Sundials Support:	
+
+Tcl Support:		yes
+Python Support:		
+
+Silo Support:		yes
+NetCDF Support:	
+HDF5 Support:		
+Zlib Support:		
+SZlib Support:		
+
+Backend: 		none
+OMP Support:		
+Kokkos Support:		
+CUDA Support:		
+RMM Support:		
+Umpire Support:         

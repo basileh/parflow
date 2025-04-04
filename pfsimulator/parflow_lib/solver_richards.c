@@ -1168,10 +1168,10 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &z0m);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++)
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->z0m1d)[18 * n + c] = z0m;
+            (public_xtra->z0m1d)[19 * n + c] = z0m;
           }
         }
         amps_FreeInvoice(invoice);
